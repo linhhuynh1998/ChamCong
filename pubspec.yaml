@@ -1,0 +1,56 @@
+name: b2msr
+description: A Flutter application structured with the MVC pattern.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  geocoding: ^3.0.0
+  geolocator: ^13.0.2
+  http: ^1.2.2
+  local_auth: ^2.3.0
+  shared_preferences: ^2.5.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.6
+
+logo_path: &logo_path assets/logo/logo.png
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: *logo_path
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: *logo_path
+    background_color: "#FFFFFF"
+    theme_color: "#0F766E"
+  windows:
+    generate: true
+    image_path: *logo_path
+    icon_size: 48
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: *logo_path
+  android: true
+  ios: true
+  web: true
+  android_12:
+    color: "#FFFFFF"
+    image: *logo_path

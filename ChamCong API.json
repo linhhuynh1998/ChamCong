@@ -1,0 +1,600 @@
+{
+  "v": 11,
+  "id": "cmny2ydo0208req1ltcbia3qn",
+  "name": "ChamCong API",
+  "folders": [
+    {
+      "v": 11,
+      "id": "cmny2yk1g208ueq1l527xs7c6",
+      "name": "Login",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "name": "Login",
+          "method": "POST",
+          "endpoint": "<<base_url>>/auth/login",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "email: thaotrinh@gmail.com\npassword: deocho123"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Me",
+          "method": "GET",
+          "endpoint": "<<base_url>>/auth/me",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Logout",
+          "method": "POST",
+          "endpoint": "<<base_url>>/auth/logout",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null
+    },
+    {
+      "v": 11,
+      "id": "cmny4l06y35h7gb1lnawq0jja",
+      "name": "CheckIn or CheckOut",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "name": "List Attendance",
+          "method": "GET",
+          "endpoint": "<<base_url>>/attendance",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Check In",
+          "method": "POST",
+          "endpoint": "<<base_url>>/attendance/checkin",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "employee_id: \nwork_date: \nlocation: \nlatitude: 10.842433\nlongitude: 106.679459\naccuracy: \ncheckout_reason: "
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Check Out",
+          "method": "POST",
+          "endpoint": "<<base_url>>/attendance/checkout",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "attendance_log_id: \nemployee_id: \nwork_date: \nlocation: \nlatitude: 10.842433\nlongitude: 106.679459\naccuracy: \ncheckout_reason: "
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null
+    },
+    {
+      "v": 11,
+      "id": "cmnzkaune4uacgb1lvz5bvoir",
+      "name": "Region",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "name": "Region",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/regions",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Add New Region",
+          "method": "POST",
+          "endpoint": "<<base_url>>/company/regions",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "name: Linhuynh Developer\ndescription: Công ty LinhHuynh"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Update Region",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/company/regions/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "name: Linhuynh Developer\ndescription: Công ty LinhHuynh"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Delete Region",
+          "method": "DELETE",
+          "endpoint": "<<base_url>>/company/regions/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null
+    },
+    {
+      "v": 11,
+      "id": "cmnznt12d4uy4gb1lih3unryu",
+      "name": "Branches",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "id": "cmnzkb4gj4uafgb1lrngmspr2",
+          "name": "Branches",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/branches",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "id": "cmnznkyg53zd1eq1lyc4gkqps",
+          "name": "Add New Branches",
+          "method": "POST",
+          "endpoint": "<<base_url>>/company/branches",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "region_id: 1\nname: Linhuynh Developer\ndescription: Công ty LinhHuynh"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "id": "cmnznn7343zd9eq1l9rf6brea",
+          "name": "Update Branches",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/company/branches/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "region_id: 1\nname: Linhuynh Developer\ndescription: Công ty LinhHuynh"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "id": "cmnznqy3t3zdueq1l7djqw2ar",
+          "name": "Delete Branches",
+          "method": "DELETE",
+          "endpoint": "<<base_url>>/company/branches/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null
+    },
+    {
+      "v": 11,
+      "id": "cmnzo8nak4v0ogb1lhmtlxs0b",
+      "name": "Departments",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "id": "cmnznt1314uy6gb1lp17xcav3",
+          "name": "Departments",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/departments",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "id": "cmnznt1314uy8gb1lx41vxysd",
+          "name": "Add New Departments",
+          "method": "POST",
+          "endpoint": "<<base_url>>/company/departments",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "name: Linhuynh Developer\ndescription: Công ty LinhHuynh"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "id": "cmnznt1324uyagb1le6zngzf9",
+          "name": "Update Departments",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/company/departments/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "name: Linhuynh Developer\ndescription: Công ty LinhHuynh"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "id": "cmnznt1324uycgb1l9dua1jqa",
+          "name": "Delete Departments",
+          "method": "DELETE",
+          "endpoint": "<<base_url>>/company/departments/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null
+    },
+    {
+      "v": 11,
+      "id": "cmnzodg084v1cgb1lnog10579",
+      "name": "Job Titles",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "id": "cmnzo8nb64v0qgb1ltzvr9ndo",
+          "name": "Departments",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/job-titles",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "id": "cmnzo8nb74v0sgb1lt6kjdnc1",
+          "name": "Add New Departments",
+          "method": "POST",
+          "endpoint": "<<base_url>>/company/job-titles",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "name: Linhuynh Developer\ndescription: Công ty LinhHuynh"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "id": "cmnzo8nb74v0ugb1lcyhrqx37",
+          "name": "Update Departments",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/company/job-titles/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "name: CEO/Chủ tịch\ndescription: CEO/Chủ tịch"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "id": "cmnzo8nb74v0wgb1l5h8qzwn7",
+          "name": "Delete Departments",
+          "method": "DELETE",
+          "endpoint": "<<base_url>>/company/job-titles/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null
+    }
+  ],
+  "requests": [],
+  "auth": {
+    "authType": "inherit",
+    "authActive": true
+  },
+  "headers": [],
+  "variables": [],
+  "description": null
+}
