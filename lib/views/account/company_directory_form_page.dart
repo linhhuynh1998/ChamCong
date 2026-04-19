@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../controllers/company_directory_form_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_notice.dart';
+import '../../core/widgets/primary_section_app_bar.dart';
 import '../../models/company_directory_item.dart';
 
 class CompanyDirectoryFormPage extends StatefulWidget {
@@ -240,35 +241,15 @@ class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        elevation: _isAttendanceLocationForm ? 1 : 0,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: Colors.black,
-            size: 28,
-          ),
-        ),
-        titleSpacing: 0,
-        title: Text(
-          _pageTitle,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
-          ),
-        ),
+      appBar: PrimarySectionAppBar(
+        title: _pageTitle,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
             child: TextButton(
               onPressed: _controller.isSubmitting ? null : _submit,
               style: TextButton.styleFrom(
-                foregroundColor: Colors.black,
+                foregroundColor: Colors.white,
                 textStyle: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
@@ -280,7 +261,7 @@ class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.black,
+                        color: Colors.white,
                       ),
                     )
                   : Text(_submitLabel),
@@ -293,7 +274,7 @@ class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
           animation: _controller,
           builder: (context, _) {
             if (_isAttendanceLocationForm) {
-              return _AttendanceLocationForm(
+              return _AttendanceLocationEditorForm(
                 controller: _controller,
                 onSelectBranch: _showBranchPicker,
                 onSelectDepartment: _showDepartmentPicker,
@@ -398,6 +379,156 @@ class _AttendanceLocationForm extends StatelessWidget {
       ],
     );
   }
+}
+
+class _AttendanceLocationEditorForm extends StatelessWidget {
+  const _AttendanceLocationEditorForm({
+    required this.controller,
+    required this.onSelectBranch,
+    required this.onSelectDepartment,
+  });
+
+  final CompanyDirectoryFormController controller;
+  final VoidCallback onSelectBranch;
+  final VoidCallback onSelectDepartment;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(22, 28, 22, 28),
+      children: [
+        _buildFieldLabel('Vị trí', isRequired: true),
+        const SizedBox(height: 18),
+        _AppTextField(
+          controller: controller.nameController,
+          minLines: 1,
+          maxLines: 1,
+          hintText: 'Nhập chữ',
+        ),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Địa chỉ', isRequired: true),
+        const SizedBox(height: 18),
+        _AppTextField(
+          controller: controller.descriptionController,
+          minLines: 1,
+          maxLines: 1,
+          hintText: 'Nhập chữ',
+        ),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Quốc gia'),
+        const SizedBox(height: 18),
+        _AppTextField(
+          controller: controller.countryController,
+          minLines: 1,
+          maxLines: 1,
+          hintText: 'Việt Nam',
+        ),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Thành phố'),
+        const SizedBox(height: 18),
+        _AppTextField(
+          controller: controller.cityController,
+          minLines: 1,
+          maxLines: 1,
+          hintText: 'Nhập thành phố',
+        ),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Phường/Xã'),
+        const SizedBox(height: 18),
+        _AppTextField(
+          controller: controller.wardController,
+          minLines: 1,
+          maxLines: 1,
+          hintText: 'Nhập phường/xã',
+        ),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Địa chỉ chi tiết'),
+        const SizedBox(height: 18),
+        _AppTextField(
+          controller: controller.addressDetailController,
+          minLines: 1,
+          maxLines: 1,
+          hintText: 'Nhập địa chỉ chi tiết',
+        ),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Địa chỉ (tự động)'),
+        const SizedBox(height: 18),
+        _AppTextField(
+          controller: controller.fullAddressController,
+          minLines: 2,
+          maxLines: 3,
+          hintText: 'Nhập địa chỉ tổng hợp',
+        ),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Chi nhánh', isRequired: true),
+        const SizedBox(height: 18),
+        _SelectorField(
+          label: controller.selectedBranchName.isEmpty
+              ? 'Chọn chi nhánh'
+              : controller.selectedBranchName,
+          isLoading: controller.isLoadingBranches,
+          onTap: onSelectBranch,
+        ),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Chi nhánh phụ'),
+        const SizedBox(height: 18),
+        const _SelectorField(label: 'Chọn chi nhánh phụ'),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Phòng ban'),
+        const SizedBox(height: 18),
+        _SelectorField(
+          label: controller.selectedDepartmentName.isEmpty
+              ? 'Chọn phòng ban'
+              : controller.selectedDepartmentName,
+          isLoading: controller.isLoadingDepartments,
+          onTap: onSelectDepartment,
+        ),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Nhân viên'),
+        const SizedBox(height: 18),
+        const _SelectorField(label: 'Chọn nhân viên'),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Vĩ độ checkin'),
+        const SizedBox(height: 18),
+        _AppTextField(
+          controller: controller.latitudeController,
+          minLines: 1,
+          maxLines: 1,
+          hintText: '10.842433',
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        ),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Kinh độ checkin'),
+        const SizedBox(height: 18),
+        _AppTextField(
+          controller: controller.longitudeController,
+          minLines: 1,
+          maxLines: 1,
+          hintText: '106.679459',
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        ),
+        const SizedBox(height: 34),
+        _buildFieldLabel('Bán kính checkin (m)'),
+        const SizedBox(height: 18),
+        _AppTextField(
+          controller: controller.radiusController,
+          minLines: 1,
+          maxLines: 1,
+          hintText: '150',
+          keyboardType: TextInputType.number,
+        ),
+        const SizedBox(height: 30),
+        const _MapPreviewCard(),
+      ],
+    );
+  }
+}
+
+Widget _buildFieldLabel(String title, {bool isRequired = false}) {
+  return _FieldLabel(
+    title: title,
+    isRequired: isRequired,
+  );
 }
 
 class _DefaultDirectoryForm extends StatelessWidget {

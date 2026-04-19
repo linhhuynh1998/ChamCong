@@ -19,11 +19,38 @@ class CompanyDirectoryFormController extends ChangeNotifier {
         regionIdController = TextEditingController(
           text: initialItem?.regionId ?? '',
         ),
-        branchIdController = TextEditingController(),
+        branchIdController = TextEditingController(
+          text: initialItem?.branchId ?? '',
+        ),
         subBranchIdController = TextEditingController(),
-        departmentIdController = TextEditingController(),
+        departmentIdController = TextEditingController(
+          text: initialItem?.departmentId ?? '',
+        ),
         employeeIdController = TextEditingController(),
-        radiusController = TextEditingController(text: '150') {
+        countryController = TextEditingController(
+          text: initialItem?.country ?? 'Việt Nam',
+        ),
+        cityController = TextEditingController(text: initialItem?.city ?? ''),
+        wardController = TextEditingController(text: initialItem?.ward ?? ''),
+        addressDetailController = TextEditingController(
+          text: initialItem?.addressDetail ?? '',
+        ),
+        fullAddressController = TextEditingController(
+          text: initialItem?.fullAddress ??
+              initialItem?.description ??
+              '',
+        ),
+        latitudeController = TextEditingController(
+          text: initialItem?.latitude ?? '',
+        ),
+        longitudeController = TextEditingController(
+          text: initialItem?.longitude ?? '',
+        ),
+        radiusController = TextEditingController(
+          text: initialItem?.radius ?? '150',
+        ) {
+    _selectedBranchName = initialItem?.branchName ?? '';
+    _selectedDepartmentName = initialItem?.departmentName ?? '';
     if (requiresRegionId) {
       loadRegions();
     }
@@ -43,6 +70,13 @@ class CompanyDirectoryFormController extends ChangeNotifier {
   final TextEditingController subBranchIdController;
   final TextEditingController departmentIdController;
   final TextEditingController employeeIdController;
+  final TextEditingController countryController;
+  final TextEditingController cityController;
+  final TextEditingController wardController;
+  final TextEditingController addressDetailController;
+  final TextEditingController fullAddressController;
+  final TextEditingController latitudeController;
+  final TextEditingController longitudeController;
   final TextEditingController radiusController;
 
   bool _isLoadingRegions = false;
@@ -194,6 +228,13 @@ class CompanyDirectoryFormController extends ChangeNotifier {
     final departmentId = departmentIdController.text.trim();
     final subBranchId = subBranchIdController.text.trim();
     final employeeId = employeeIdController.text.trim();
+    final country = countryController.text.trim();
+    final city = cityController.text.trim();
+    final ward = wardController.text.trim();
+    final addressDetail = addressDetailController.text.trim();
+    final fullAddress = fullAddressController.text.trim();
+    final latitude = latitudeController.text.trim();
+    final longitude = longitudeController.text.trim();
     final radius = radiusController.text.trim();
 
     if (name.isEmpty) {
@@ -220,6 +261,13 @@ class CompanyDirectoryFormController extends ChangeNotifier {
           ? <String, dynamic>{
               'address': description,
               'branch_id': branchId,
+              if (country.isNotEmpty) 'country': country,
+              if (city.isNotEmpty) 'city': city,
+              if (ward.isNotEmpty) 'ward': ward,
+              if (addressDetail.isNotEmpty) 'address_detail': addressDetail,
+              if (fullAddress.isNotEmpty) 'full_address': fullAddress,
+              if (latitude.isNotEmpty) 'latitude': latitude,
+              if (longitude.isNotEmpty) 'longitude': longitude,
               if (subBranchId.isNotEmpty) 'sub_branch_id': subBranchId,
               if (departmentId.isNotEmpty) 'department_id': departmentId,
               if (employeeId.isNotEmpty) 'employee_id': employeeId,
@@ -275,6 +323,13 @@ class CompanyDirectoryFormController extends ChangeNotifier {
     subBranchIdController.dispose();
     departmentIdController.dispose();
     employeeIdController.dispose();
+    countryController.dispose();
+    cityController.dispose();
+    wardController.dispose();
+    addressDetailController.dispose();
+    fullAddressController.dispose();
+    latitudeController.dispose();
+    longitudeController.dispose();
     radiusController.dispose();
     super.dispose();
   }
