@@ -1,4 +1,5 @@
 import '../core/network/api_client.dart';
+import '../core/network/api_exception.dart';
 import '../models/employee_list_item.dart';
 import 'session_service.dart';
 
@@ -26,6 +27,102 @@ class EmployeeDirectoryService {
         .map(EmployeeListItem.fromJson)
         .where((item) => item.name.trim().isNotEmpty)
         .toList();
+  }
+
+  Future<EmployeeListItem?> fetchEmployee(String id) async {
+    if (id.trim().isEmpty) {
+      return null;
+    }
+
+    final token = await _sessionService.getToken();
+    final response = await _apiClient.get(
+      '/company/employees/$id',
+      headers: _buildAuthHeaders(token),
+    );
+
+    final rawItem = _extractItem(response);
+    if (rawItem == null || rawItem.isEmpty) {
+      return null;
+    }
+
+    return EmployeeListItem.fromJson(rawItem);
+  }
+
+  Future<String> createEmployee({
+    required String name,
+    required String phone,
+    required String email,
+    required String employeeCode,
+    required String birthDate,
+    required String address,
+    required String accessRoleId,
+    required String accessRoleName,
+    required String regionId,
+    required String branchId,
+    required String departmentId,
+    required String jobTitleId,
+  }) async {
+    final token = await _sessionService.getToken();
+    final response = await _apiClient.post(
+      '/company/employees',
+      headers: _buildAuthHeaders(token),
+      body: _buildEmployeeBody(
+        name: name,
+        phone: phone,
+        email: email,
+        employeeCode: employeeCode,
+        birthDate: birthDate,
+        address: address,
+        accessRoleId: accessRoleId,
+        accessRoleName: accessRoleName,
+        regionId: regionId,
+        branchId: branchId,
+        departmentId: departmentId,
+        jobTitleId: jobTitleId,
+      ),
+      formUrlEncoded: true,
+    );
+
+    return response['message']?.toString() ?? 'Tạo nhân viên thành công.';
+  }
+
+  Future<String> updateEmployee(
+    String id, {
+    required String name,
+    required String phone,
+    required String email,
+    required String employeeCode,
+    required String birthDate,
+    required String address,
+    required String accessRoleId,
+    required String accessRoleName,
+    required String regionId,
+    required String branchId,
+    required String departmentId,
+    required String jobTitleId,
+  }) async {
+    final token = await _sessionService.getToken();
+    final response = await _apiClient.patch(
+      '/company/employees/$id',
+      headers: _buildAuthHeaders(token),
+      body: _buildEmployeeBody(
+        name: name,
+        phone: phone,
+        email: email,
+        employeeCode: employeeCode,
+        birthDate: birthDate,
+        address: address,
+        accessRoleId: accessRoleId,
+        accessRoleName: accessRoleName,
+        regionId: regionId,
+        branchId: branchId,
+        departmentId: departmentId,
+        jobTitleId: jobTitleId,
+      ),
+      formUrlEncoded: true,
+    );
+
+    return response['message']?.toString() ?? 'Cập nhật nhân viên thành công.';
   }
 
   List<dynamic> _extractList(Map<String, dynamic> response) {
@@ -64,5 +161,99 @@ class EmployeeDirectoryService {
     }
 
     return const <dynamic>[];
+  }
+
+  Map<String, dynamic>? _extractItem(Map<String, dynamic> response) {
+    final candidates = <dynamic>[
+      response['data'],
+      response['item'],
+      response['result'],
+      response['record'],
+      response['employee'],
+      response['user'],
+      response,
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate is Map<String, dynamic>) {
+        if (_looksLikeEmployee(candidate)) {
+          return candidate;
+        }
+
+        for (final value in candidate.values) {
+          if (value is Map<String, dynamic> && _looksLikeEmployee(value)) {
+            return value;
+          }
+        }
+      }
+
+      if (candidate is List) {
+        final firstMap =
+            candidate.whereType<Map<String, dynamic>>().firstOrNull;
+        if (firstMap != null) {
+          return firstMap;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  bool _looksLikeEmployee(Map<String, dynamic> source) {
+    const keys = <String>{
+      'name',
+      'full_name',
+      'phone',
+      'mobile',
+      'email',
+      'employee_id',
+      'employee_code',
+    };
+
+    return source.keys.any(keys.contains);
+  }
+
+  Map<String, String> _buildAuthHeaders(String? token) {
+    return <String, String>{
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  Map<String, dynamic> _buildEmployeeBody({
+    required String name,
+    required String phone,
+    required String email,
+    required String employeeCode,
+    required String birthDate,
+    required String address,
+    required String accessRoleId,
+    required String accessRoleName,
+    required String regionId,
+    required String branchId,
+    required String departmentId,
+    required String jobTitleId,
+  }) {
+    final body = <String, dynamic>{
+      'name': name,
+      'full_name': name,
+      if (phone.isNotEmpty) 'phone': phone,
+      if (email.isNotEmpty) 'email': email,
+      if (employeeCode.isNotEmpty) 'employee_id': employeeCode,
+      if (employeeCode.isNotEmpty) 'employee_code': employeeCode,
+      if (birthDate.isNotEmpty) 'birth_date': birthDate,
+      if (address.isNotEmpty) 'address': address,
+      if (accessRoleId.isNotEmpty) 'role': accessRoleId,
+      if (accessRoleName.isNotEmpty) 'role_name': accessRoleName,
+      if (regionId.isNotEmpty) 'region_id': regionId,
+      if (branchId.isNotEmpty) 'branch_id': branchId,
+      if (departmentId.isNotEmpty) 'department_id': departmentId,
+      if (jobTitleId.isNotEmpty) 'job_title_id': jobTitleId,
+    };
+
+    if (body['name'] == null || body['name'].toString().trim().isEmpty) {
+      throw ApiException('Tên nhân viên không hợp lệ.');
+    }
+
+    return body;
   }
 }

@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_notice.dart';
 import '../../core/widgets/primary_section_app_bar.dart';
 import '../../models/employee_list_item.dart';
+import 'employee_form_page.dart';
 
 class EmployeeListPage extends StatefulWidget {
   const EmployeeListPage({super.key});
@@ -29,8 +30,15 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
   }
 
   Future<void> _handleAddEmployee() async {
-    AppNotice.showInfo(
-        context, 'Màn tạo nhân viên sẽ được nối ở bước tiếp theo.');
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const EmployeeFormPage(),
+      ),
+    );
+
+    if (changed == true) {
+      await _controller.loadEmployees();
+    }
   }
 
   Future<void> _handleFilter() async {
@@ -47,19 +55,34 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
     AppNotice.showInfo(context, 'Số điện thoại: $cleanedPhone');
   }
 
+  Future<void> _openEmployee(EmployeeListItem employee) async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => EmployeeFormPage(initialEmployee: employee),
+      ),
+    );
+
+    if (changed == true) {
+      await _controller.loadEmployees();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PrimarySectionAppBar(
         title: 'Danh sách nhân viên',
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        showBottomDivider: false,
         actions: [
           IconButton(
             onPressed: _handleAddEmployee,
             icon: const Icon(
               Icons.add_rounded,
               size: 30,
-              color: AppColors.sectionHeader,
+              color: Colors.white,
             ),
           ),
           const SizedBox(width: 8),
@@ -132,6 +155,7 @@ class _EmployeeListPageState extends State<EmployeeListPage> {
                                   _controller.visibleEmployees[index];
                               return _EmployeeTile(
                                 item: employee,
+                                onTap: () => _openEmployee(employee),
                                 onCall: () => _callEmployee(employee.phone),
                               );
                             },
@@ -223,10 +247,12 @@ class _FilterButton extends StatelessWidget {
 class _EmployeeTile extends StatelessWidget {
   const _EmployeeTile({
     required this.item,
+    required this.onTap,
     required this.onCall,
   });
 
   final EmployeeListItem item;
+  final VoidCallback onTap;
   final VoidCallback onCall;
 
   @override
@@ -236,67 +262,73 @@ class _EmployeeTile extends StatelessWidget {
       if (item.department.trim().isNotEmpty) item.department.trim(),
     ];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 92,
-            height: 92,
-            decoration: BoxDecoration(
-              color: const Color(0xFFB8C7F0),
-              borderRadius: BorderRadius.circular(26),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              item.initials,
-              style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 92,
+                height: 92,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFB8C7F0),
+                  borderRadius: BorderRadius.circular(26),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  item.initials,
                   style: const TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
                   ),
                 ),
-                if (subtitleParts.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitleParts.join(' • '),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.muted,
+              ),
+              const SizedBox(width: 18),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                ],
-              ],
-            ),
+                    if (subtitleParts.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        subtitleParts.join(' • '),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              IconButton(
+                onPressed: onCall,
+                icon: const Icon(
+                  Icons.call_rounded,
+                  size: 34,
+                  color: Color(0xFF19D96A),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          IconButton(
-            onPressed: onCall,
-            icon: const Icon(
-              Icons.call_rounded,
-              size: 34,
-              color: Color(0xFF19D96A),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

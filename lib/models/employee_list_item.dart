@@ -7,6 +7,15 @@ class EmployeeListItem {
     required this.employeeCode,
     required this.jobTitle,
     required this.department,
+    this.accessRole = '',
+    this.regionId = '',
+    this.regionName = '',
+    this.branchId = '',
+    this.branchName = '',
+    this.departmentId = '',
+    this.jobTitleId = '',
+    this.birthDate = '',
+    this.address = '',
   });
 
   final String id;
@@ -16,6 +25,15 @@ class EmployeeListItem {
   final String employeeCode;
   final String jobTitle;
   final String department;
+  final String accessRole;
+  final String regionId;
+  final String regionName;
+  final String branchId;
+  final String branchName;
+  final String departmentId;
+  final String jobTitleId;
+  final String birthDate;
+  final String address;
 
   String get initials {
     final segments = name
@@ -57,6 +75,8 @@ class EmployeeListItem {
 
   factory EmployeeListItem.fromJson(Map<String, dynamic> json) {
     final source = _nestedUserMap(json) ?? json;
+    final region = _asMap(source['region']) ?? _asMap(json['region']);
+    final branch = _asMap(source['branch']) ?? _asMap(json['branch']);
 
     return EmployeeListItem(
       id: _pickFirstString(source, const ['id', 'employee_id', 'user_id']),
@@ -85,11 +105,46 @@ class EmployeeListItem {
         'job_title',
         'position',
         'title',
+        'job_title_name',
       ]),
       department: _pickFirstString(source, const [
         'department',
         'department_name',
         'team',
+      ]),
+      accessRole: _pickFirstString(source, const [
+        'role',
+        'access_role',
+        'permission',
+      ]),
+      regionId: _pickFirstString(source, const [
+        'region_id',
+      ]),
+      regionName: region?['name']?.toString() ??
+          _pickFirstString(source, const ['region_name']),
+      branchId: _pickFirstString(source, const [
+        'branch_id',
+        'default_branch_id',
+      ]),
+      branchName: branch?['name']?.toString() ??
+          _pickFirstString(source, const ['branch_name']),
+      departmentId: _pickFirstString(source, const [
+        'department_id',
+        'default_department_id',
+      ]),
+      jobTitleId: _pickFirstString(source, const [
+        'job_title_id',
+        'position_id',
+      ]),
+      birthDate: _pickFirstString(source, const [
+        'birth_date',
+        'date_of_birth',
+        'birthday',
+      ]),
+      address: _pickFirstString(source, const [
+        'address',
+        'full_address',
+        'address_detail',
       ]),
     );
   }
@@ -110,6 +165,10 @@ class EmployeeListItem {
     }
 
     return null;
+  }
+
+  static Map<String, dynamic>? _asMap(dynamic value) {
+    return value is Map<String, dynamic> ? value : null;
   }
 
   static String _pickFirstString(

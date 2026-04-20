@@ -42,6 +42,9 @@ class CompanySettingsPage extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: const PrimarySectionAppBar(
         title: 'Công ty',
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        showBottomDivider: false,
       ),
       body: SafeArea(
         child: ListView.separated(

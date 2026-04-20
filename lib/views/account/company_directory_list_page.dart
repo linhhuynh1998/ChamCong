@@ -61,6 +61,9 @@ class _CompanyDirectoryListPageState extends State<CompanyDirectoryListPage> {
       backgroundColor: Colors.white,
       appBar: PrimarySectionAppBar(
         title: widget.title,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        showBottomDivider: false,
         actions: [
           IconButton(
             onPressed: () => _openForm(),

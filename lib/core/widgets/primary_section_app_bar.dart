@@ -9,11 +9,17 @@ class PrimarySectionAppBar extends StatelessWidget
     required this.title,
     this.actions,
     this.showBottomDivider = true,
+    this.backgroundColor = Colors.white,
+    this.foregroundColor = AppColors.sectionHeader,
+    this.bottomDividerColor = AppColors.divider,
   });
 
   final String title;
   final List<Widget>? actions;
   final bool showBottomDivider;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final Color bottomDividerColor;
 
   @override
   Size get preferredSize => const Size.fromHeight(88);
@@ -22,37 +28,37 @@ class PrimarySectionAppBar extends StatelessWidget
   Widget build(BuildContext context) {
     return AppBar(
       toolbarHeight: 88,
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.white,
+      backgroundColor: backgroundColor,
+      surfaceTintColor: backgroundColor,
       elevation: 0,
       automaticallyImplyLeading: false,
       titleSpacing: 0,
       leadingWidth: 68,
       bottom: showBottomDivider
-          ? const PreferredSize(
-              preferredSize: Size.fromHeight(1),
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(1),
               child: Divider(
                 height: 1,
                 thickness: 1,
-                color: AppColors.divider,
+                color: bottomDividerColor,
               ),
             )
           : null,
       leading: IconButton(
         onPressed: () => Navigator.of(context).maybePop(),
-        icon: const Icon(
+        icon: Icon(
           Icons.arrow_back_rounded,
-          color: AppColors.sectionHeader,
+          color: foregroundColor,
           size: 30,
         ),
       ),
       centerTitle: true,
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w700,
-          color: AppColors.sectionHeader,
+          color: foregroundColor,
         ),
       ),
       actions: actions,

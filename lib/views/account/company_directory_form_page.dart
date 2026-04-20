@@ -31,8 +31,7 @@ class CompanyDirectoryFormPage extends StatefulWidget {
 class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
   late final CompanyDirectoryFormController _controller;
 
-  bool get _isAttendanceLocationForm =>
-      widget.endpoint == '/company/location';
+  bool get _isAttendanceLocationForm => widget.endpoint == '/company/location';
 
   String get _pageTitle {
     if (_isAttendanceLocationForm) {
@@ -403,6 +402,9 @@ class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
       backgroundColor: Colors.white,
       appBar: PrimarySectionAppBar(
         title: _pageTitle,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        showBottomDivider: false,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
