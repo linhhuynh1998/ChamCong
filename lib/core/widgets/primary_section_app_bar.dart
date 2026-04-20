@@ -8,12 +8,12 @@ class PrimarySectionAppBar extends StatelessWidget
     super.key,
     required this.title,
     this.actions,
+    this.showBottomDivider = true,
   });
 
   final String title;
   final List<Widget>? actions;
-
-  static const Color backgroundColor = AppColors.primary;
+  final bool showBottomDivider;
 
   @override
   Size get preferredSize => const Size.fromHeight(88);
@@ -22,17 +22,27 @@ class PrimarySectionAppBar extends StatelessWidget
   Widget build(BuildContext context) {
     return AppBar(
       toolbarHeight: 88,
-      backgroundColor: backgroundColor,
-      surfaceTintColor: backgroundColor,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
       elevation: 0,
       automaticallyImplyLeading: false,
       titleSpacing: 0,
       leadingWidth: 68,
+      bottom: showBottomDivider
+          ? const PreferredSize(
+              preferredSize: Size.fromHeight(1),
+              child: Divider(
+                height: 1,
+                thickness: 1,
+                color: AppColors.divider,
+              ),
+            )
+          : null,
       leading: IconButton(
         onPressed: () => Navigator.of(context).maybePop(),
         icon: const Icon(
           Icons.arrow_back_rounded,
-          color: Colors.white,
+          color: AppColors.sectionHeader,
           size: 30,
         ),
       ),
@@ -42,7 +52,7 @@ class PrimarySectionAppBar extends StatelessWidget
         style: const TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w700,
-          color: Colors.white,
+          color: AppColors.sectionHeader,
         ),
       ),
       actions: actions,

@@ -44,18 +44,26 @@ class CompanyDirectoryItem {
 
     return CompanyDirectoryItem(
       id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
+      name: json['name']?.toString() ??
+          json['address']?.toString() ??
+          json['full_address']?.toString() ??
+          '',
       description: json['description']?.toString() ??
+          json['address']?.toString() ??
           json['note']?.toString() ??
           '',
       regionId: json['region_id']?.toString() ?? region?['id']?.toString(),
       regionName: region?['name']?.toString(),
-      branchId: json['branch_id']?.toString() ?? branch?['id']?.toString(),
+      branchId: json['branch_id']?.toString() ??
+          json['default_branch_id']?.toString() ??
+          branch?['id']?.toString(),
       branchName: branch?['name']?.toString(),
-      departmentId:
-          json['department_id']?.toString() ?? department?['id']?.toString(),
+      departmentId: json['department_id']?.toString() ??
+          json['default_department_id']?.toString() ??
+          department?['id']?.toString(),
       departmentName: department?['name']?.toString(),
       country: _pickFirstString(json, const [
+        'countries',
         'country',
         'country_name',
       ]),

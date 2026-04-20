@@ -263,13 +263,8 @@ class _AttendanceHomePageState extends State<AttendanceHomePage> {
           },
         ),
       ),
-      bottomNavigationBar: WorkBottomBar(
+      bottomNavigationBar: const WorkBottomBar(
         currentItem: WorkBottomBarItem.work,
-        onItemSelected: (item) {
-          if (item == WorkBottomBarItem.work) {
-            Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-          }
-        },
       ),
     );
   }
@@ -1137,6 +1132,12 @@ String _buildActionTitle({
     return 'Chưa Đến Giờ';
   }
 
+  if (_isAfterCheckInDeadline(selectedRecord) &&
+      !hasCheckedIn &&
+      !hasCheckedOut) {
+    return 'Hết Giờ Chấm Công';
+  }
+
   return hasCheckedIn && !hasCheckedOut ? 'Rời Ca' : 'Vào Ca';
 }
 
@@ -1179,6 +1180,13 @@ String _buildActionTimeText({
     return 'Ca ${_formatTimeOfDay(shiftStart)}, chấm công từ ${_formatTimeOfDay(checkInWindowStart)}';
   }
 
+  if (_isAfterCheckInDeadline(selectedRecord) &&
+      !hasCheckedIn &&
+      !hasCheckedOut) {
+    final shiftEnd = _resolveShiftEnd(selectedRecord);
+    return 'Đã quá giờ chấm công ${_formatTimeOfDay(shiftEnd)}';
+  }
+
   final now = TimeOfDay.now();
   final nowLabel =
       '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
@@ -1204,6 +1212,12 @@ bool _canSubmitAttendance({
     return false;
   }
 
+  if (!hasCheckedIn &&
+      !hasCheckedOut &&
+      _isAfterCheckInDeadline(selectedRecord)) {
+    return false;
+  }
+
   return true;
 }
 
@@ -1219,6 +1233,20 @@ TimeOfDay _resolveShiftStart(AttendanceDayRecord? record) {
   return _parseTimeOfDay(record?.shiftStartTime) ?? _defaultShiftStart;
 }
 
+TimeOfDay _resolveShiftEnd(AttendanceDayRecord? record) {
+  final parsed = _parseTimeOfDay(record?.shiftEndTime);
+  if (parsed != null) {
+    return parsed;
+  }
+
+  final shiftStart = _resolveShiftStart(record);
+  final totalMinutes = _timeOfDayToMinutes(shiftStart) + (8 * 60);
+  return TimeOfDay(
+    hour: (totalMinutes ~/ 60) % 24,
+    minute: totalMinutes % 60,
+  );
+}
+
 TimeOfDay _resolveCheckInWindowStart(AttendanceDayRecord? record) {
   final shiftStart = _resolveShiftStart(record);
   final totalMinutes = _timeOfDayToMinutes(shiftStart) - 60;
@@ -1227,6 +1255,12 @@ TimeOfDay _resolveCheckInWindowStart(AttendanceDayRecord? record) {
     hour: normalizedMinutes ~/ 60,
     minute: normalizedMinutes % 60,
   );
+}
+
+bool _isAfterCheckInDeadline(AttendanceDayRecord? selectedRecord) {
+  final now = TimeOfDay.now();
+  return _timeOfDayToMinutes(now) >
+      _timeOfDayToMinutes(_resolveShiftEnd(selectedRecord));
 }
 
 TimeOfDay? _parseTimeOfDay(String? raw) {

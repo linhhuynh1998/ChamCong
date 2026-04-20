@@ -6,6 +6,7 @@ import 'core/theme/app_theme.dart';
 import 'views/account/account_page.dart';
 import 'views/account/company_directory_list_page.dart';
 import 'views/account/company_settings_page.dart';
+import 'views/account/employee_list_page.dart';
 import 'views/account/management_settings_page.dart';
 import 'views/account/region_settings_page.dart';
 import 'views/home/attendance_home_page.dart';
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         AppRoutes.account: (_) => const AccountPage(),
         AppRoutes.managementSettings: (_) => const ManagementSettingsPage(),
         AppRoutes.companySettings: (_) => const CompanySettingsPage(),
+        AppRoutes.employeeSettings: (_) => const EmployeeListPage(),
         AppRoutes.regionSettings: (_) => const RegionSettingsPage(),
         AppRoutes.branchSettings: (_) => const CompanyDirectoryListPage(
               title: 'Chi nhánh',

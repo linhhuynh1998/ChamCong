@@ -587,6 +587,198 @@
       "headers": [],
       "variables": [],
       "description": null
+    },
+    {
+      "v": 11,
+      "id": "cmo28cq4w14b9gb1lez7v5jhm",
+      "name": "Location",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "name": "Countries",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/location-options/countries",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Cities",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/location-options/cities",
+          "params": [
+            {
+              "key": "country",
+              "value": "VN",
+              "active": true,
+              "description": ""
+            }
+          ],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Wards",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/location-options/wards",
+          "params": [
+            {
+              "key": "country",
+              "value": "VN",
+              "active": true,
+              "description": ""
+            },
+            {
+              "key": "city_code",
+              "value": "79",
+              "active": true,
+              "description": ""
+            }
+          ],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Geocode",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/location-options/geocode",
+          "params": [
+            {
+              "key": "country",
+              "value": "VN",
+              "active": true,
+              "description": ""
+            },
+            {
+              "key": "city",
+              "value": "Thành phố Hồ Chí Minh",
+              "active": true,
+              "description": ""
+            },
+            {
+              "key": "ward",
+              "value": "Quận Gò Vấp - Phường 6",
+              "active": true,
+              "description": ""
+            },
+            {
+              "key": "address_detail",
+              "value": "60 Đường số 27",
+              "active": true,
+              "description": ""
+            }
+          ],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Location",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/location",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Update Location",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/company/location",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "countries: VN\naddress: 60 Đường số 27, Phường 6, Thành phố Hồ Chí Minh, Việt Nam\naddress_detail: 60 Đường số 27\ncity: Thành phố Hồ Chí Minh\nward: Quận Gò Vấp - Phường 6\nlatitude: 10.842591\nlongitude: 106.6801951\ndefault_branch_id: 1\ndefault_department_id: 8\nradius_meters: 300"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null
     }
   ],
   "requests": [],
