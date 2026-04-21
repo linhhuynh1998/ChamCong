@@ -15,8 +15,18 @@ class CompanyEntityItem {
     final data = _asMap(json['data']) ?? json;
 
     return CompanyEntityItem(
-      id: data['id']?.toString() ?? '',
-      name: data['name']?.toString() ?? data['title']?.toString() ?? '',
+      id: _pickFirstString(data, const [
+            'id',
+            'permission_group_id',
+            'group_id',
+          ]) ??
+          '',
+      name: _pickFirstString(data, const [
+            'name',
+            'title',
+            'group_name',
+          ]) ??
+          '',
       description: data['description']?.toString() ??
           data['note']?.toString() ??
           data['notes']?.toString() ??
@@ -27,5 +37,19 @@ class CompanyEntityItem {
 
   static Map<String, dynamic>? _asMap(dynamic value) {
     return value is Map<String, dynamic> ? value : null;
+  }
+
+  static String? _pickFirstString(
+    Map<String, dynamic> source,
+    List<String> keys,
+  ) {
+    for (final key in keys) {
+      final value = source[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+
+    return null;
   }
 }

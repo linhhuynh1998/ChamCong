@@ -23,11 +23,13 @@ class ManagementSettingsPage extends StatelessWidget {
       title: 'Ca làm',
       icon: Icons.event_available_rounded,
       color: Color(0xFF5B94F0),
+      routeName: AppRoutes.shiftSettings,
     ),
     _ManagementSettingItem(
       title: 'Xếp ca',
       icon: Icons.fact_check_outlined,
       color: Color(0xFF5B94F0),
+      routeName: AppRoutes.shiftSettings,
     ),
     _ManagementSettingItem(
       title: 'Điểm danh',

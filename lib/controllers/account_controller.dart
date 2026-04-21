@@ -64,4 +64,25 @@ class AccountController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> refreshApp() async {
+    _isSubmitting = true;
+    notifyListeners();
+
+    try {
+      await _authService.refreshAppState();
+      await loadProfile(forceRefresh: true);
+      _lastActionSucceeded = true;
+      _statusMessage = 'Đã làm mới ứng dụng.';
+    } on ApiException catch (error) {
+      _lastActionSucceeded = false;
+      _statusMessage = error.message;
+    } catch (_) {
+      _lastActionSucceeded = false;
+      _statusMessage = 'Không thể làm mới ứng dụng.';
+    } finally {
+      _isSubmitting = false;
+      notifyListeners();
+    }
+  }
 }

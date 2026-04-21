@@ -1193,7 +1193,12 @@ String _buildActionTimeText({
   return nowLabel;
 }
 
-const TimeOfDay _defaultShiftStart = TimeOfDay(hour: 14, minute: 0);
+const TimeOfDay _defaultShiftStart = TimeOfDay(hour: 8, minute: 0);
+const TimeOfDay _defaultShiftEnd = TimeOfDay(hour: 17, minute: 0);
+const TimeOfDay _morningShiftStart = TimeOfDay(hour: 8, minute: 0);
+const TimeOfDay _morningShiftEnd = TimeOfDay(hour: 14, minute: 30);
+const TimeOfDay _afternoonShiftStart = TimeOfDay(hour: 14, minute: 0);
+const TimeOfDay _afternoonShiftEnd = TimeOfDay(hour: 20, minute: 30);
 
 bool _canSubmitAttendance({
   required bool isFutureSelected,
@@ -1230,7 +1235,20 @@ bool _isBeforeCheckInWindow(AttendanceDayRecord? selectedRecord) {
 int _timeOfDayToMinutes(TimeOfDay value) => (value.hour * 60) + value.minute;
 
 TimeOfDay _resolveShiftStart(AttendanceDayRecord? record) {
-  return _parseTimeOfDay(record?.shiftStartTime) ?? _defaultShiftStart;
+  final parsed = _parseTimeOfDay(record?.shiftStartTime);
+  if (parsed != null) {
+    return parsed;
+  }
+
+  final inferred = _inferShiftTimeFromName(
+    record?.shiftName,
+    preferEndTime: false,
+  );
+  if (inferred != null) {
+    return inferred;
+  }
+
+  return _defaultShiftStart;
 }
 
 TimeOfDay _resolveShiftEnd(AttendanceDayRecord? record) {
@@ -1239,8 +1257,19 @@ TimeOfDay _resolveShiftEnd(AttendanceDayRecord? record) {
     return parsed;
   }
 
+  final inferred = _inferShiftTimeFromName(
+    record?.shiftName,
+    preferEndTime: true,
+  );
+  if (inferred != null) {
+    return inferred;
+  }
+
   final shiftStart = _resolveShiftStart(record);
-  final totalMinutes = _timeOfDayToMinutes(shiftStart) + (8 * 60);
+  final defaultStartMinutes = _timeOfDayToMinutes(_defaultShiftStart);
+  final defaultEndMinutes = _timeOfDayToMinutes(_defaultShiftEnd);
+  final totalMinutes = _timeOfDayToMinutes(shiftStart) +
+      (defaultEndMinutes - defaultStartMinutes);
   return TimeOfDay(
     hour: (totalMinutes ~/ 60) % 24,
     minute: totalMinutes % 60,
@@ -1261,6 +1290,26 @@ bool _isAfterCheckInDeadline(AttendanceDayRecord? selectedRecord) {
   final now = TimeOfDay.now();
   return _timeOfDayToMinutes(now) >
       _timeOfDayToMinutes(_resolveShiftEnd(selectedRecord));
+}
+
+TimeOfDay? _inferShiftTimeFromName(
+  String? shiftName, {
+  required bool preferEndTime,
+}) {
+  final normalized = shiftName?.trim().toLowerCase() ?? '';
+  if (normalized.isEmpty) {
+    return null;
+  }
+
+  if (normalized.contains('sáng')) {
+    return preferEndTime ? _morningShiftEnd : _morningShiftStart;
+  }
+
+  if (normalized.contains('chiều')) {
+    return preferEndTime ? _afternoonShiftEnd : _afternoonShiftStart;
+  }
+
+  return null;
 }
 
 TimeOfDay? _parseTimeOfDay(String? raw) {

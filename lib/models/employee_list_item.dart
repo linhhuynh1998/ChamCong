@@ -8,6 +8,7 @@ class EmployeeListItem {
     required this.jobTitle,
     required this.department,
     this.accessRole = '',
+    String? accessRoleId,
     this.regionId = '',
     this.regionName = '',
     this.branchId = '',
@@ -16,7 +17,9 @@ class EmployeeListItem {
     this.jobTitleId = '',
     this.birthDate = '',
     this.address = '',
-  });
+    String? status,
+  })  : _accessRoleId = accessRoleId,
+        _status = status;
 
   final String id;
   final String name;
@@ -26,6 +29,7 @@ class EmployeeListItem {
   final String jobTitle;
   final String department;
   final String accessRole;
+  final String? _accessRoleId;
   final String regionId;
   final String regionName;
   final String branchId;
@@ -34,6 +38,10 @@ class EmployeeListItem {
   final String jobTitleId;
   final String birthDate;
   final String address;
+  final String? _status;
+
+  String get accessRoleId => _accessRoleId ?? '';
+  String get status => _status ?? '';
 
   String get initials {
     final segments = name
@@ -77,6 +85,11 @@ class EmployeeListItem {
     final source = _nestedUserMap(json) ?? json;
     final region = _asMap(source['region']) ?? _asMap(json['region']);
     final branch = _asMap(source['branch']) ?? _asMap(json['branch']);
+    final department =
+        _asMap(source['department']) ?? _asMap(json['department']);
+    final jobTitle = _asMap(source['job_title']) ?? _asMap(json['job_title']);
+    final permissionGroup =
+        _asMap(source['permission_group']) ?? _asMap(json['permission_group']);
 
     return EmployeeListItem(
       id: _pickFirstString(source, const ['id', 'employee_id', 'user_id']),
@@ -111,11 +124,32 @@ class EmployeeListItem {
         'department',
         'department_name',
         'team',
-      ]),
+      ]) !=
+              ''
+          ? _pickFirstString(source, const [
+              'department',
+              'department_name',
+              'team',
+            ])
+          : department?['name']?.toString() ?? '',
       accessRole: _pickFirstString(source, const [
         'role',
         'access_role',
         'permission',
+      ]) !=
+              ''
+          ? _pickFirstString(source, const [
+              'role',
+              'access_role',
+              'permission',
+            ])
+          : permissionGroup?['name']?.toString() ??
+              source['role_name']?.toString() ??
+              '',
+      accessRoleId: _pickFirstString(source, const [
+        'permission_group_id',
+        'role_id',
+        'access_role_id',
       ]),
       regionId: _pickFirstString(source, const [
         'region_id',
@@ -135,7 +169,13 @@ class EmployeeListItem {
       jobTitleId: _pickFirstString(source, const [
         'job_title_id',
         'position_id',
-      ]),
+      ]) !=
+              ''
+          ? _pickFirstString(source, const [
+              'job_title_id',
+              'position_id',
+            ])
+          : jobTitle?['id']?.toString() ?? '',
       birthDate: _pickFirstString(source, const [
         'birth_date',
         'date_of_birth',
@@ -145,6 +185,10 @@ class EmployeeListItem {
         'address',
         'full_address',
         'address_detail',
+      ]),
+      status: _pickFirstString(source, const [
+        'status',
+        'employment_status',
       ]),
     );
   }

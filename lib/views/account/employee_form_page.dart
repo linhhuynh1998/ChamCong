@@ -54,13 +54,26 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
   Future<void> _pickAccessRole() async {
     final selected = await _showOptionPicker<LocationOption>(
       title: 'Quyền truy cập',
-      items: EmployeeFormController.accessRoles,
+      items: _controller.accessRoles,
       selectedId: _controller.selectedAccessRoleName,
       itemLabel: (item) => item.name,
       itemId: (item) => item.id,
     );
     if (selected != null) {
       _controller.selectAccessRole(selected);
+    }
+  }
+
+  Future<void> _pickStatus() async {
+    final selected = await _showOptionPicker<LocationOption>(
+      title: 'Trạng thái',
+      items: EmployeeFormController.employeeStatuses,
+      selectedId: _controller.selectedStatusName,
+      itemLabel: (item) => item.name,
+      itemId: (item) => item.id,
+    );
+    if (selected != null) {
+      _controller.selectStatus(selected);
     }
   }
 
@@ -273,7 +286,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Lưu'),
+                  : const Text(
+                    'Lưu',
+                    style: TextStyle(color: Colors.white),
+                  ),
             ),
           ),
         ],
@@ -300,6 +316,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
                           controller: _controller,
                           onPickBirthDate: _pickBirthDate,
                           onPickAccessRole: _pickAccessRole,
+                          onPickStatus: _pickStatus,
                           onPickRegion: _pickRegion,
                           onPickBranch: _pickBranch,
                           onPickDepartment: _pickDepartment,
@@ -393,6 +410,7 @@ class _EmployeeInformationTab extends StatelessWidget {
     required this.controller,
     required this.onPickBirthDate,
     required this.onPickAccessRole,
+    required this.onPickStatus,
     required this.onPickRegion,
     required this.onPickBranch,
     required this.onPickDepartment,
@@ -402,6 +420,7 @@ class _EmployeeInformationTab extends StatelessWidget {
   final EmployeeFormController controller;
   final VoidCallback onPickBirthDate;
   final VoidCallback onPickAccessRole;
+  final VoidCallback onPickStatus;
   final VoidCallback onPickRegion;
   final VoidCallback onPickBranch;
   final VoidCallback onPickDepartment;
@@ -470,6 +489,14 @@ class _EmployeeInformationTab extends StatelessWidget {
                   value: controller.selectedAccessRoleName,
                   placeholder: 'Quyền truy cập',
                   onTap: onPickAccessRole,
+                ),
+              ),
+              _EmployeeFieldBlock(
+                label: 'Trạng thái',
+                child: _EmployeeSelectorField(
+                  value: controller.selectedStatusName,
+                  placeholder: 'Trạng thái',
+                  onTap: onPickStatus,
                 ),
               ),
               _EmployeeFieldBlock(

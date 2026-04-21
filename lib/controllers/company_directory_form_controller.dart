@@ -578,12 +578,6 @@ class CompanyDirectoryFormController extends ChangeNotifier {
     if (!hasEnoughData) {
       _geocodeDebounce?.cancel();
       _lastGeocodeKey = '';
-      if (latitudeController.text.isNotEmpty ||
-          longitudeController.text.isNotEmpty) {
-        latitudeController.clear();
-        longitudeController.clear();
-        notifyListeners();
-      }
       return;
     }
 

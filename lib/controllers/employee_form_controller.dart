@@ -5,6 +5,7 @@ import '../models/company_directory_item.dart';
 import '../models/employee_list_item.dart';
 import '../models/location_option.dart';
 import '../services/company_directory_service.dart';
+import '../services/company_entity_service.dart';
 import '../services/employee_directory_service.dart';
 
 class EmployeeFormController extends ChangeNotifier {
@@ -12,8 +13,10 @@ class EmployeeFormController extends ChangeNotifier {
     this.initialEmployee,
     EmployeeDirectoryService? employeeService,
     CompanyDirectoryService? companyService,
+    CompanyEntityService? companyEntityService,
   })  : _employeeService = employeeService ?? EmployeeDirectoryService(),
         _companyService = companyService ?? CompanyDirectoryService(),
+        _companyEntityService = companyEntityService ?? CompanyEntityService(),
         nameController = TextEditingController(
           text: initialEmployee?.name ?? '',
         ),
@@ -27,17 +30,22 @@ class EmployeeFormController extends ChangeNotifier {
           text: initialEmployee?.employeeCode ?? '',
         ),
         birthDateController = TextEditingController(
-          text: initialEmployee?.birthDate ?? '',
+          text: _formatBirthDateForDisplay(initialEmployee?.birthDate ?? ''),
         ),
         addressController = TextEditingController(
           text: initialEmployee?.address ?? '',
         ) {
-    _selectedAccessRoleId = _resolveInitialAccessRoleId(
-      initialEmployee?.accessRole ?? '',
-    );
+    _selectedAccessRoleId = (initialEmployee?.accessRoleId ?? '').trim();
+    if (_selectedAccessRoleId.isEmpty) {
+      _selectedAccessRoleId = _resolveInitialAccessRoleId(
+        initialEmployee?.accessRole ?? '',
+      );
+    }
     _selectedAccessRoleName = _resolveAccessRoleName(
       initialEmployee?.accessRole ?? '',
     );
+    _selectedStatusId = _resolveInitialStatusId(initialEmployee?.status ?? '');
+    _selectedStatusName = _resolveStatusName(initialEmployee?.status ?? '');
     _selectedRegionId = initialEmployee?.regionId ?? '';
     _selectedRegionName = initialEmployee?.regionName ?? '';
     _selectedBranchId = initialEmployee?.branchId ?? '';
@@ -52,6 +60,7 @@ class EmployeeFormController extends ChangeNotifier {
   final EmployeeListItem? initialEmployee;
   final EmployeeDirectoryService _employeeService;
   final CompanyDirectoryService _companyService;
+  final CompanyEntityService _companyEntityService;
 
   final TextEditingController nameController;
   final TextEditingController phoneController;
@@ -68,6 +77,7 @@ class EmployeeFormController extends ChangeNotifier {
   List<CompanyDirectoryItem> _branches = const <CompanyDirectoryItem>[];
   List<CompanyDirectoryItem> _departments = const <CompanyDirectoryItem>[];
   List<CompanyDirectoryItem> _jobTitles = const <CompanyDirectoryItem>[];
+  List<LocationOption> _accessRoles = const <LocationOption>[];
   String _selectedAccessRoleId = '';
   String _selectedAccessRoleName = '';
   String _selectedRegionId = '';
@@ -78,10 +88,12 @@ class EmployeeFormController extends ChangeNotifier {
   String _selectedDepartmentName = '';
   String _selectedJobTitleId = '';
   String _selectedJobTitleName = '';
+  String _selectedStatusId = '1';
+  String _selectedStatusName = 'Đang làm việc';
 
-  static const List<LocationOption> accessRoles = <LocationOption>[
-    LocationOption(id: 'manager', name: 'Quản lý'),
-    LocationOption(id: 'member', name: 'Nhân viên'),
+  static const List<LocationOption> employeeStatuses = <LocationOption>[
+    LocationOption(id: '1', name: 'Đang làm việc'),
+    LocationOption(id: '0', name: 'Ngừng làm việc'),
   ];
 
   bool get isEditing => (initialEmployee?.id ?? '').trim().isNotEmpty;
@@ -93,11 +105,13 @@ class EmployeeFormController extends ChangeNotifier {
   List<CompanyDirectoryItem> get branches => _branches;
   List<CompanyDirectoryItem> get departments => _departments;
   List<CompanyDirectoryItem> get jobTitles => _jobTitles;
+  List<LocationOption> get accessRoles => _accessRoles;
   String get selectedAccessRoleName => _selectedAccessRoleName;
   String get selectedRegionName => _selectedRegionName;
   String get selectedBranchName => _selectedBranchName;
   String get selectedDepartmentName => _selectedDepartmentName;
   String get selectedJobTitleName => _selectedJobTitleName;
+  String get selectedStatusName => _selectedStatusName;
 
   Future<void> _bootstrap() async {
     _isLoading = true;
@@ -105,6 +119,7 @@ class EmployeeFormController extends ChangeNotifier {
 
     try {
       await Future.wait(<Future<void>>[
+        _loadAccessRoles(),
         _loadRegions(),
         _loadBranches(),
         _loadDepartments(),
@@ -130,6 +145,27 @@ class EmployeeFormController extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> _loadAccessRoles() async {
+    final entities =
+        await _companyEntityService.listEntities('/company/permission-groups');
+    _accessRoles = entities
+        .where((item) => item.id.trim().isNotEmpty && item.name.trim().isNotEmpty)
+        .map(
+          (item) => LocationOption(
+            id: item.id.trim(),
+            name: item.name.trim(),
+          ),
+        )
+        .toList();
+
+    if (_selectedAccessRoleId.isNotEmpty) {
+      _selectedAccessRoleName = _resolveAccessRoleName(_selectedAccessRoleId);
+    } else if (_selectedAccessRoleName.isNotEmpty) {
+      _selectedAccessRoleId = _resolveInitialAccessRoleId(_selectedAccessRoleName);
+      _selectedAccessRoleName = _resolveAccessRoleName(_selectedAccessRoleName);
     }
   }
 
@@ -173,6 +209,12 @@ class EmployeeFormController extends ChangeNotifier {
     final month = date.month.toString().padLeft(2, '0');
     final year = date.year.toString();
     birthDateController.text = '$day-$month-$year';
+    notifyListeners();
+  }
+
+  void selectStatus(LocationOption option) {
+    _selectedStatusId = option.id;
+    _selectedStatusName = option.name;
     notifyListeners();
   }
 
@@ -229,6 +271,7 @@ class EmployeeFormController extends ChangeNotifier {
               branchId: _selectedBranchId,
               departmentId: _selectedDepartmentId,
               jobTitleId: _selectedJobTitleId,
+              status: _selectedStatusId,
             )
           : await _employeeService.createEmployee(
               name: name,
@@ -243,6 +286,7 @@ class EmployeeFormController extends ChangeNotifier {
               branchId: _selectedBranchId,
               departmentId: _selectedDepartmentId,
               jobTitleId: _selectedJobTitleId,
+              status: _selectedStatusId,
             );
 
       _lastActionSucceeded = true;
@@ -272,10 +316,16 @@ class EmployeeFormController extends ChangeNotifier {
     phoneController.text = item.phone;
     emailController.text = item.email;
     employeeCodeController.text = item.employeeCode;
-    birthDateController.text = item.birthDate;
+    birthDateController.text = _formatBirthDateForDisplay(item.birthDate);
     addressController.text = item.address;
-    _selectedAccessRoleId = _resolveInitialAccessRoleId(item.accessRole);
-    _selectedAccessRoleName = _resolveAccessRoleName(item.accessRole);
+    _selectedAccessRoleId = item.accessRoleId.trim().isNotEmpty
+        ? item.accessRoleId.trim()
+        : _resolveInitialAccessRoleId(item.accessRole);
+    _selectedAccessRoleName = _selectedAccessRoleId.isNotEmpty
+        ? _resolveAccessRoleName(_selectedAccessRoleId)
+        : _resolveAccessRoleName(item.accessRole);
+    _selectedStatusId = _resolveInitialStatusId(item.status);
+    _selectedStatusName = _resolveStatusName(item.status);
     _selectedRegionId = item.regionId;
     _selectedRegionName =
         item.regionName.isNotEmpty ? item.regionName : _selectedRegionName;
@@ -310,7 +360,7 @@ class EmployeeFormController extends ChangeNotifier {
     }
 
     if (normalized == 'employee') {
-      return 'member';
+      return '';
     }
 
     return '';
@@ -329,11 +379,77 @@ class EmployeeFormController extends ChangeNotifier {
       }
     }
 
-    if (normalized == 'employee' || normalized == 'member') {
+    if (normalized == 'member' || normalized == 'employee') {
       return 'Nhân viên';
     }
 
+    if (normalized == 'manager' || normalized == 'admin') {
+      return 'Quản lý';
+    }
+
     return name;
+  }
+
+  String _resolveInitialStatusId(String value) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized.isEmpty) {
+      return '1';
+    }
+
+    for (final option in employeeStatuses) {
+      if (option.id == normalized || option.name.toLowerCase() == normalized) {
+        return option.id;
+      }
+    }
+
+    if (normalized == 'active' ||
+        normalized == 'working' ||
+        normalized == 'enabled') {
+      return '1';
+    }
+    if (normalized == 'inactive' ||
+        normalized == 'disabled' ||
+        normalized == '0') {
+      return '0';
+    }
+
+    return value.trim().isEmpty ? '1' : value.trim();
+  }
+
+  String _resolveStatusName(String value) {
+    final resolvedId = _resolveInitialStatusId(value).toLowerCase();
+    for (final option in employeeStatuses) {
+      if (option.id == resolvedId || option.name.toLowerCase() == resolvedId) {
+        return option.name;
+      }
+    }
+
+    return value.trim().isEmpty ? 'Đang làm việc' : value;
+  }
+
+  static String _formatBirthDateForDisplay(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return '';
+    }
+
+    final dashParts = trimmed.split('-');
+    if (dashParts.length == 3 && dashParts[0].length == 4) {
+      final year = dashParts[0];
+      final month = dashParts[1].padLeft(2, '0');
+      final day = dashParts[2].padLeft(2, '0');
+      return '$day-$month-$year';
+    }
+
+    final slashParts = trimmed.split('/');
+    if (slashParts.length == 3 && slashParts[2].length == 4) {
+      final day = slashParts[0].padLeft(2, '0');
+      final month = slashParts[1].padLeft(2, '0');
+      final year = slashParts[2];
+      return '$day-$month-$year';
+    }
+
+    return trimmed;
   }
 
   @override

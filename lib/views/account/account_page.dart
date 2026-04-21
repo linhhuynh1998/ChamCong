@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../controllers/account_controller.dart';
+import '../../core/routes/app_navigator.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/widgets/app_notice.dart';
 import '../../core/widgets/work_bottom_bar.dart';
@@ -18,65 +19,64 @@ class _AccountPageState extends State<AccountPage> {
 
   static const List<_AccountMenuItemData> _managementItems =
       <_AccountMenuItemData>[
-        _AccountMenuItemData(
-          title: 'Thiết lập quản lý',
-          icon: Icons.settings_outlined,
-          color: Color(0xFF79D895),
-        ),
-        _AccountMenuItemData(
-          title: 'Báo cáo',
-          icon: Icons.bar_chart_rounded,
-          color: Color(0xFF79D895),
-        ),
-        _AccountMenuItemData(
-          title: 'Quản lý phép',
-          icon: Icons.calendar_month_outlined,
-          color: Color(0xFF79D895),
-        ),
-        _AccountMenuItemData(
-          title: 'Phiếu lương',
-          icon: Icons.receipt_long_outlined,
-          color: Color(0xFF79D895),
-        ),
-      ];
+    _AccountMenuItemData(
+      title: 'Thiết lập quản lý',
+      icon: Icons.settings_outlined,
+      color: Color(0xFF79D895),
+    ),
+    _AccountMenuItemData(
+      title: 'Báo cáo',
+      icon: Icons.bar_chart_rounded,
+      color: Color(0xFF79D895),
+    ),
+    _AccountMenuItemData(
+      title: 'Quản lý phép',
+      icon: Icons.calendar_month_outlined,
+      color: Color(0xFF79D895),
+    ),
+    _AccountMenuItemData(
+      title: 'Phiếu lương',
+      icon: Icons.receipt_long_outlined,
+      color: Color(0xFF79D895),
+    ),
+  ];
 
   static const List<_AccountMenuItemData> _settingItems =
       <_AccountMenuItemData>[
-        _AccountMenuItemData(
-          title: 'Ngôn ngữ',
-          icon: Icons.language_rounded,
-          color: Color(0xFF2E4F7E),
-        ),
-        _AccountMenuItemData(
-          title: 'Cài đặt cảnh báo',
-          icon: Icons.notifications_active_outlined,
-          color: Color(0xFF2E4F7E),
-        ),
-        _AccountMenuItemData(
-          title: 'Đổi doanh nghiệp',
-          icon: Icons.business_center_outlined,
-          color: Color(0xFF2E4F7E),
-        ),
-      ];
+    _AccountMenuItemData(
+      title: 'Ngôn ngữ',
+      icon: Icons.language_rounded,
+      color: Color(0xFF2E4F7E),
+    ),
+    _AccountMenuItemData(
+      title: 'Cài đặt cảnh báo',
+      icon: Icons.notifications_active_outlined,
+      color: Color(0xFF2E4F7E),
+    ),
+    _AccountMenuItemData(
+      title: 'Đổi doanh nghiệp',
+      icon: Icons.business_center_outlined,
+      color: Color(0xFF2E4F7E),
+    ),
+  ];
 
-  static const List<_AccountMenuItemData> _systemItems =
-      <_AccountMenuItemData>[
-        _AccountMenuItemData(
-          title: 'Thông tin ứng dụng',
-          icon: Icons.description_outlined,
-          color: Color(0xFFA52A2A),
-        ),
-        _AccountMenuItemData(
-          title: 'Làm mới ứng dụng',
-          icon: Icons.sync_rounded,
-          color: Color(0xFFA52A2A),
-        ),
-        _AccountMenuItemData(
-          title: 'Trung tâm bảo mật',
-          icon: Icons.shield_outlined,
-          color: Color(0xFFA52A2A),
-        ),
-      ];
+  static const List<_AccountMenuItemData> _systemItems = <_AccountMenuItemData>[
+    _AccountMenuItemData(
+      title: 'Thông tin ứng dụng',
+      icon: Icons.description_outlined,
+      color: Color(0xFFA52A2A),
+    ),
+    _AccountMenuItemData(
+      title: 'Làm mới ứng dụng',
+      icon: Icons.sync_rounded,
+      color: Color(0xFFA52A2A),
+    ),
+    _AccountMenuItemData(
+      title: 'Trung tâm bảo mật',
+      icon: Icons.shield_outlined,
+      color: Color(0xFFA52A2A),
+    ),
+  ];
 
   @override
   void initState() {
@@ -88,6 +88,82 @@ class _AccountPageState extends State<AccountPage> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleSystemItemTap(_AccountMenuItemData item) async {
+    if (item.title == 'Thông tin ứng dụng') {
+      Navigator.of(context).pushNamed(AppRoutes.appInfo);
+      return;
+    }
+
+    if (item.title == 'Trung tâm bảo mật') {
+      Navigator.of(context).pushNamed(AppRoutes.securityCenter);
+      return;
+    }
+
+    if (item.title != 'Làm mới ứng dụng' || _controller.isSubmitting) {
+      return;
+    }
+
+    if (AppNavigator.context == null) {
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return const AlertDialog(
+          backgroundColor: Colors.white,
+          content: Row(
+            children: [
+              SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.4),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'Đang làm mới ứng dụng...',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    await _controller.refreshApp();
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.of(context, rootNavigator: true).pop();
+
+    if (_controller.lastActionSucceeded) {
+      AppNotice.showSuccess(context, 'Ứng dụng đã được làm mới.');
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+    } else {
+      AppNotice.showError(context, _controller.statusMessage);
+    }
+  }
+
+  void _handleSettingItemTap(_AccountMenuItemData item) {
+    switch (item.title) {
+      case 'Ngôn ngữ':
+        Navigator.of(context).pushNamed(AppRoutes.languageSettings);
+        break;
+      case 'Cài đặt cảnh báo':
+        Navigator.of(context).pushNamed(AppRoutes.notificationSettings);
+        break;
+      case 'Đổi doanh nghiệp':
+        Navigator.of(context).pushNamed(AppRoutes.companySwitch);
+        break;
+    }
   }
 
   @override
@@ -108,7 +184,8 @@ class _AccountPageState extends State<AccountPage> {
                   _AccountTopBar(
                     isSubmitting: _controller.isSubmitting,
                     onBackToWork: () {
-                      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+                      Navigator.of(context)
+                          .pushReplacementNamed(AppRoutes.home);
                     },
                   ),
                   const SizedBox(height: 14),
@@ -116,9 +193,17 @@ class _AccountPageState extends State<AccountPage> {
                   const SizedBox(height: 28),
                   _AccountMenuSection(items: _managementItems),
                   const SizedBox(height: 18),
-                  _AccountMenuSection(items: _settingItems),
+                  _AccountMenuSection(
+                    items: _settingItems,
+                    onItemTap: (item) async {
+                      _handleSettingItemTap(item);
+                    },
+                  ),
                   const SizedBox(height: 18),
-                  _AccountMenuSection(items: _systemItems),
+                  _AccountMenuSection(
+                    items: _systemItems,
+                    onItemTap: _handleSystemItemTap,
+                  ),
                   const SizedBox(height: 36),
                   OutlinedButton(
                     onPressed: _controller.isSubmitting
@@ -244,9 +329,8 @@ class _AccountIdentity extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = profile?.name.trim().isNotEmpty == true
-        ? profile!.name
-        : 'Nhân viên';
+    final displayName =
+        profile?.name.trim().isNotEmpty == true ? profile!.name : 'Nhân viên';
     final subtitle = _buildSubtitle(profile);
     final initial = displayName.characters.first.toUpperCase();
 
@@ -297,10 +381,10 @@ class _AccountIdentity extends StatelessWidget {
     final role = profile?.jobTitle.trim().isNotEmpty == true
         ? profile!.jobTitle
         : profile?.department.trim().isNotEmpty == true
-        ? profile!.department
-        : profile?.role.trim().isNotEmpty == true
-        ? profile!.role
-        : 'Nhân viên';
+            ? profile!.department
+            : profile?.role.trim().isNotEmpty == true
+                ? profile!.role
+                : 'Nhân viên';
     final maskedPhone = _maskPhone(profile?.phone ?? '');
     return maskedPhone.isEmpty ? role : '$role • $maskedPhone';
   }
@@ -318,9 +402,11 @@ class _AccountIdentity extends StatelessWidget {
 class _AccountMenuSection extends StatelessWidget {
   const _AccountMenuSection({
     required this.items,
+    this.onItemTap,
   });
 
   final List<_AccountMenuItemData> items;
+  final Future<void> Function(_AccountMenuItemData item)? onItemTap;
 
   @override
   Widget build(BuildContext context) {
@@ -332,7 +418,14 @@ class _AccountMenuSection extends StatelessWidget {
       child: Column(
         children: [
           for (var index = 0; index < items.length; index++) ...[
-            _AccountMenuTile(item: items[index]),
+            _AccountMenuTile(
+              item: items[index],
+              onTapOverride: onItemTap == null
+                  ? null
+                  : () {
+                      onItemTap!(items[index]);
+                    },
+            ),
             if (index != items.length - 1)
               const Divider(height: 1, color: Color(0xFFF0F0EE)),
           ],
@@ -345,17 +438,20 @@ class _AccountMenuSection extends StatelessWidget {
 class _AccountMenuTile extends StatelessWidget {
   const _AccountMenuTile({
     required this.item,
+    this.onTapOverride,
   });
 
   final _AccountMenuItemData item;
+  final VoidCallback? onTapOverride;
 
   @override
   Widget build(BuildContext context) {
-    final resolvedOnTap = item.onTap ?? () {
-      if (item.title == 'Thiết lập quản lý') {
-        Navigator.of(context).pushNamed(AppRoutes.managementSettings);
-      }
-    };
+    final resolvedOnTap = onTapOverride ??
+        () {
+          if (item.title == 'Thiết lập quản lý') {
+            Navigator.of(context).pushNamed(AppRoutes.managementSettings);
+          }
+        };
 
     return Material(
       color: Colors.transparent,
@@ -391,11 +487,9 @@ class _AccountMenuItemData {
     required this.title,
     required this.icon,
     required this.color,
-    this.onTap,
   });
 
   final String title;
   final IconData icon;
   final Color color;
-  final VoidCallback? onTap;
 }

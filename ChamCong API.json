@@ -779,6 +779,270 @@
       "headers": [],
       "variables": [],
       "description": null
+    },
+    {
+      "v": 11,
+      "id": "cmo6zsvyj6uvgeq1ljreti0ft",
+      "name": "Employee",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "name": "Employees",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/employees/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Employees Detail",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/employees",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Employees Create",
+          "method": "POST",
+          "endpoint": "<<base_url>>/company/employees",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "name: Linh\nemail: devsmartid@gmail.com\npassword: deocho123\npermission_group_id: 5\nregion_id: 1\nbranch_id: 1\ndepartment_id: 8\njob_title_id: 7\ndate_of_birth: "
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Employees Update",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/company/employees/<<employee>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "name: Linh\nemail: devsmartid@gmail.com\npassword: deocho123\npermission_group_id: 5\nregion_id: 1\nbranch_id: 1\ndepartment_id: 8\njob_title_id: 7\ndate_of_birth: "
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Employees Delete",
+          "method": "DELETE",
+          "endpoint": "<<base_url>>/company/employees/<<employee>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null
+    },
+    {
+      "v": 11,
+      "id": "cmo7yd1ti1qvpgb1m0p3p7da4",
+      "name": "Permission Group",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "name": "Permission Group",
+          "method": "GET",
+          "endpoint": "<<base_url>>/company/permission-groups",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null
+    },
+    {
+      "v": 11,
+      "id": "cmo7z0gww1qyigb1mrei2hs9a",
+      "name": "Shifts",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "name": "Shifts",
+          "method": "GET",
+          "endpoint": "<<base_url>>/attendance/shifts",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Shifts Create",
+          "method": "POST",
+          "endpoint": "<<base_url>>/attendance/shifts",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "name: Ca sáng\nstart_hour: 08\nstart_minute: 00\nend_hour: 17\nend_minute: 30\nregion_id: 1\nbranch_id: 2\ndepartment_ids[]: 1\ndepartment_ids[]: 2\njob_title_ids[]: 3\nweekdays[]: 1\nweekdays[]: 2\nweekdays[]: 3\nweekdays[]: 4\nweekdays[]: 5\nweekdays[]: 6"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Shifts Update",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/attendance/shifts/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/x-www-form-urlencoded",
+            "body": "name: Ca sáng\nstart_hour: 08\nstart_minute: 00\nend_hour: 17\nend_minute: 30\nregion_id: 1\nbranch_id: 2\ndepartment_ids[]: 1\ndepartment_ids[]: 2\njob_title_ids[]: 3\nweekdays[]: 1\nweekdays[]: 2\nweekdays[]: 3\nweekdays[]: 4\nweekdays[]: 5\nweekdays[]: 6"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Shifts Delete",
+          "method": "DELETE",
+          "endpoint": "<<base_url>>/attendance/shifts/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null
     }
   ],
   "requests": [],

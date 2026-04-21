@@ -61,6 +61,7 @@ class EmployeeDirectoryService {
     required String branchId,
     required String departmentId,
     required String jobTitleId,
+    required String status,
   }) async {
     final token = await _sessionService.getToken();
     final response = await _apiClient.post(
@@ -79,6 +80,7 @@ class EmployeeDirectoryService {
         branchId: branchId,
         departmentId: departmentId,
         jobTitleId: jobTitleId,
+        status: status,
       ),
       formUrlEncoded: true,
     );
@@ -100,6 +102,7 @@ class EmployeeDirectoryService {
     required String branchId,
     required String departmentId,
     required String jobTitleId,
+    required String status,
   }) async {
     final token = await _sessionService.getToken();
     final response = await _apiClient.patch(
@@ -118,6 +121,7 @@ class EmployeeDirectoryService {
         branchId: branchId,
         departmentId: departmentId,
         jobTitleId: jobTitleId,
+        status: status,
       ),
       formUrlEncoded: true,
     );
@@ -232,7 +236,10 @@ class EmployeeDirectoryService {
     required String branchId,
     required String departmentId,
     required String jobTitleId,
+    required String status,
   }) {
+    final normalizedBirthDate = _normalizeBirthDateForApi(birthDate);
+
     final body = <String, dynamic>{
       'name': name,
       'full_name': name,
@@ -240,14 +247,20 @@ class EmployeeDirectoryService {
       if (email.isNotEmpty) 'email': email,
       if (employeeCode.isNotEmpty) 'employee_id': employeeCode,
       if (employeeCode.isNotEmpty) 'employee_code': employeeCode,
-      if (birthDate.isNotEmpty) 'birth_date': birthDate,
+      if (normalizedBirthDate.isNotEmpty) 'date_of_birth': normalizedBirthDate,
+      if (normalizedBirthDate.isNotEmpty) 'birth_date': normalizedBirthDate,
       if (address.isNotEmpty) 'address': address,
+      if (_looksLikePermissionGroupId(accessRoleId))
+        'permission_group_id': accessRoleId,
       if (accessRoleId.isNotEmpty) 'role': accessRoleId,
       if (accessRoleName.isNotEmpty) 'role_name': accessRoleName,
       if (regionId.isNotEmpty) 'region_id': regionId,
       if (branchId.isNotEmpty) 'branch_id': branchId,
       if (departmentId.isNotEmpty) 'department_id': departmentId,
+      if (departmentId.isNotEmpty) 'default_department_id': departmentId,
       if (jobTitleId.isNotEmpty) 'job_title_id': jobTitleId,
+      if (jobTitleId.isNotEmpty) 'position_id': jobTitleId,
+      if (status.isNotEmpty) 'status': status,
     };
 
     if (body['name'] == null || body['name'].toString().trim().isEmpty) {
@@ -255,5 +268,40 @@ class EmployeeDirectoryService {
     }
 
     return body;
+  }
+
+  bool _looksLikePermissionGroupId(String value) {
+    return int.tryParse(value.trim()) != null;
+  }
+
+  String _normalizeBirthDateForApi(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return '';
+    }
+
+    final dashParts = trimmed.split('-');
+    if (dashParts.length == 3) {
+      if (dashParts[0].length == 4) {
+        return trimmed;
+      }
+
+      if (dashParts[2].length == 4) {
+        final day = dashParts[0].padLeft(2, '0');
+        final month = dashParts[1].padLeft(2, '0');
+        final year = dashParts[2];
+        return '$year-$month-$day';
+      }
+    }
+
+    final slashParts = trimmed.split('/');
+    if (slashParts.length == 3 && slashParts[2].length == 4) {
+      final day = slashParts[0].padLeft(2, '0');
+      final month = slashParts[1].padLeft(2, '0');
+      final year = slashParts[2];
+      return '$year-$month-$day';
+    }
+
+    return trimmed;
   }
 }
