@@ -1,4 +1,4 @@
-name: b2msr
+name: B2MSR
 description: A Flutter application structured with the MVC pattern.
 publish_to: 'none'
 version: 1.0.0+1
