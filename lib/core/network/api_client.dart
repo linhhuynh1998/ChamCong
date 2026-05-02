@@ -87,9 +87,7 @@ class ApiClient {
       ...?headers,
     };
     final requestBody = formUrlEncoded
-        ? (body ?? <String, dynamic>{}).map(
-            (key, value) => MapEntry(key, value?.toString() ?? ''),
-          )
+        ? _encodeFormBody(body ?? <String, dynamic>{})
         : jsonEncode(body ?? <String, dynamic>{});
 
     _debugLogRequest(
@@ -171,7 +169,8 @@ class ApiClient {
       return decodedBody;
     }
 
-    final message = decodedBody['message']?.toString() ??
+    final message = _buildErrorMessage(decodedBody) ??
+        decodedBody['message']?.toString() ??
         decodedBody['error']?.toString() ??
         'Yêu cầu thất bại.';
 
@@ -224,5 +223,73 @@ class ApiClient {
       sanitized['Authorization'] = 'Bearer ***';
     }
     return sanitized;
+  }
+
+  String? _buildErrorMessage(Map<String, dynamic> decodedBody) {
+    final baseMessage = decodedBody['message']?.toString().trim() ?? '';
+    final errors = decodedBody['errors'];
+    if (errors is! Map) {
+      return baseMessage.isEmpty ? null : baseMessage;
+    }
+
+    final detailMessages = <String>[];
+    for (final entry in errors.entries) {
+      final value = entry.value;
+      if (value is List) {
+        for (final item in value) {
+          final text = item?.toString().trim() ?? '';
+          if (text.isNotEmpty) {
+            detailMessages.add(text);
+          }
+        }
+        continue;
+      }
+
+      final text = value?.toString().trim() ?? '';
+      if (text.isNotEmpty) {
+        detailMessages.add(text);
+      }
+    }
+
+    if (detailMessages.isEmpty) {
+      return baseMessage.isEmpty ? null : baseMessage;
+    }
+
+    if (baseMessage.isEmpty) {
+      return detailMessages.join('\n');
+    }
+
+    return '$baseMessage\n${detailMessages.join('\n')}';
+  }
+
+  String _encodeFormBody(Map<String, dynamic> body) {
+    final segments = <String>[];
+
+    body.forEach((key, value) {
+      if (value == null) {
+        return;
+      }
+
+      if (value is Iterable) {
+        for (final item in value) {
+          final text = item?.toString().trim() ?? '';
+          if (text.isNotEmpty) {
+            segments.add(
+              '${Uri.encodeQueryComponent(key)}=${Uri.encodeQueryComponent(text)}',
+            );
+          }
+        }
+        return;
+      }
+
+      final text = value.toString().trim();
+      if (text.isNotEmpty) {
+        segments.add(
+          '${Uri.encodeQueryComponent(key)}=${Uri.encodeQueryComponent(text)}',
+        );
+      }
+    });
+
+    return segments.join('&');
   }
 }

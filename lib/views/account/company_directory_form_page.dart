@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../controllers/company_directory_form_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/app_notice.dart';
 import '../../core/widgets/primary_section_app_bar.dart';
 import '../../models/company_directory_item.dart';
+import '../../models/location_option.dart';
 
 class CompanyDirectoryFormPage extends StatefulWidget {
   const CompanyDirectoryFormPage({
@@ -28,12 +31,11 @@ class CompanyDirectoryFormPage extends StatefulWidget {
 class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
   late final CompanyDirectoryFormController _controller;
 
-  bool get _isAttendanceLocationForm =>
-      widget.endpoint == '/company/attendance-location';
+  bool get _isAttendanceLocationForm => widget.endpoint == '/company/location';
 
   String get _pageTitle {
     if (_isAttendanceLocationForm) {
-      return _controller.isEditing ? 'Chi tiết vị trí' : 'Tạo vị trí';
+      return 'Cập nhật vị trí';
     }
 
     return _controller.isEditing
@@ -42,11 +44,15 @@ class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
   }
 
   String get _submitLabel {
+    if (_isAttendanceLocationForm) {
+      return 'Lưu';
+    }
+
     if (_controller.isEditing) {
       return 'Lưu';
     }
 
-    return _isAttendanceLocationForm ? 'Thêm' : 'Tạo';
+    return 'Tạo';
   }
 
   @override
@@ -125,6 +131,74 @@ class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
 
     if (selected != null) {
       _controller.selectDepartment(selected);
+    }
+  }
+
+  Future<void> _showCountryPicker() async {
+    if (_controller.isLoadingCountries) {
+      return;
+    }
+
+    if (_controller.countries.isEmpty) {
+      AppNotice.showError(context, 'Chưa có dữ liệu quốc gia để chọn.');
+      return;
+    }
+
+    final selected = await _showLocationPicker(
+      title: 'Chọn quốc gia',
+      items: _controller.countries,
+      selectedId: _controller.selectedCountryId,
+    );
+
+    if (selected != null) {
+      await _controller.selectCountry(selected);
+    }
+  }
+
+  Future<void> _showCityPicker() async {
+    if (_controller.isLoadingCities) {
+      return;
+    }
+
+    if (_controller.cities.isEmpty) {
+      AppNotice.showError(context, 'Chưa có dữ liệu thành phố để chọn.');
+      return;
+    }
+
+    final selected = await _showLocationPicker(
+      title: 'Chọn thành phố',
+      items: _controller.cities,
+      selectedId: _controller.selectedCityId,
+    );
+
+    if (selected != null) {
+      await _controller.selectCity(selected);
+    }
+  }
+
+  Future<void> _showWardPicker() async {
+    if (_controller.isLoadingWards) {
+      return;
+    }
+
+    if (_controller.selectedCityId == null) {
+      AppNotice.showError(context, 'Vui lòng chọn thành phố trước.');
+      return;
+    }
+
+    if (_controller.wards.isEmpty) {
+      AppNotice.showError(context, 'Chưa có dữ liệu phường/xã để chọn.');
+      return;
+    }
+
+    final selected = await _showLocationPicker(
+      title: 'Chọn phường/xã',
+      items: _controller.wards,
+      selectedId: _controller.selectedWardId,
+    );
+
+    if (selected != null) {
+      _controller.selectWard(selected);
     }
   }
 
@@ -223,6 +297,91 @@ class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
     );
   }
 
+  Future<LocationOption?> _showLocationPicker({
+    required String title,
+    required List<LocationOption> items,
+    required String? selectedId,
+  }) async {
+    return showModalBottomSheet<LocationOption>(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 48,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: AppColors.divider,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: AppColors.divider,
+                    ),
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final isSelected = selectedId == item.id;
+
+                      return ListTile(
+                        onTap: () => Navigator.of(context).pop(item),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        title: Text(
+                          item.name,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? const Icon(
+                                Icons.check_circle_rounded,
+                                color: AppColors.primary,
+                              )
+                            : const Icon(
+                                Icons.chevron_right_rounded,
+                                color: AppColors.textPrimary,
+                              ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _submit() async {
     final message = await _controller.submit();
     if (!mounted) {
@@ -243,6 +402,9 @@ class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
       backgroundColor: Colors.white,
       appBar: PrimarySectionAppBar(
         title: _pageTitle,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        showBottomDivider: false,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
@@ -278,6 +440,10 @@ class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
                 controller: _controller,
                 onSelectBranch: _showBranchPicker,
                 onSelectDepartment: _showDepartmentPicker,
+                onSelectCountry: _showCountryPicker,
+                onSelectCity: _showCityPicker,
+                onSelectWard: _showWardPicker,
+                onUseCurrentLocation: _controller.fillWithCurrentLocation,
               );
             }
 
@@ -294,152 +460,58 @@ class _CompanyDirectoryFormPageState extends State<CompanyDirectoryFormPage> {
   }
 }
 
-class _AttendanceLocationForm extends StatelessWidget {
-  const _AttendanceLocationForm({
-    required this.controller,
-    required this.onSelectBranch,
-    required this.onSelectDepartment,
-  });
-
-  final CompanyDirectoryFormController controller;
-  final VoidCallback onSelectBranch;
-  final VoidCallback onSelectDepartment;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(22, 28, 22, 28),
-      children: [
-        const _FieldLabel(
-          title: 'Vị trí',
-          isRequired: true,
-        ),
-        const SizedBox(height: 18),
-        _AppTextField(
-          controller: controller.nameController,
-          minLines: 1,
-          maxLines: 1,
-          hintText: 'Nhập chữ',
-        ),
-        const SizedBox(height: 34),
-        const _FieldLabel(
-          title: 'Địa chỉ',
-          isRequired: true,
-        ),
-        const SizedBox(height: 18),
-        _AppTextField(
-          controller: controller.descriptionController,
-          minLines: 1,
-          maxLines: 1,
-          hintText: 'Nhập chữ',
-        ),
-        const SizedBox(height: 34),
-        const _FieldLabel(
-          title: 'Chi nhánh',
-          isRequired: true,
-        ),
-        const SizedBox(height: 18),
-        _SelectorField(
-          label: controller.selectedBranchName.isEmpty
-              ? 'Chọn chi nhánh'
-              : controller.selectedBranchName,
-          isLoading: controller.isLoadingBranches,
-          onTap: onSelectBranch,
-        ),
-        const SizedBox(height: 34),
-        const _FieldLabel(title: 'Chi nhánh phụ'),
-        const SizedBox(height: 18),
-        const _SelectorField(label: 'Chọn chi nhánh phụ'),
-        const SizedBox(height: 34),
-        const _FieldLabel(title: 'Phòng ban'),
-        const SizedBox(height: 18),
-        _SelectorField(
-          label: controller.selectedDepartmentName.isEmpty
-              ? 'Chọn phòng ban'
-              : controller.selectedDepartmentName,
-          isLoading: controller.isLoadingDepartments,
-          onTap: onSelectDepartment,
-        ),
-        const SizedBox(height: 34),
-        const _FieldLabel(title: 'Nhân viên'),
-        const SizedBox(height: 18),
-        const _SelectorField(label: 'Chọn nhân viên'),
-        const SizedBox(height: 34),
-        const _FieldLabel(title: 'Bán kính (m)'),
-        const SizedBox(height: 18),
-        _AppTextField(
-          controller: controller.radiusController,
-          minLines: 1,
-          maxLines: 1,
-          hintText: '150',
-          keyboardType: TextInputType.number,
-        ),
-        const SizedBox(height: 30),
-        const _MapPreviewCard(),
-      ],
-    );
-  }
-}
-
 class _AttendanceLocationEditorForm extends StatelessWidget {
   const _AttendanceLocationEditorForm({
     required this.controller,
     required this.onSelectBranch,
     required this.onSelectDepartment,
+    required this.onSelectCountry,
+    required this.onSelectCity,
+    required this.onSelectWard,
+    required this.onUseCurrentLocation,
   });
 
   final CompanyDirectoryFormController controller;
   final VoidCallback onSelectBranch;
   final VoidCallback onSelectDepartment;
+  final VoidCallback onSelectCountry;
+  final VoidCallback onSelectCity;
+  final VoidCallback onSelectWard;
+  final Future<void> Function() onUseCurrentLocation;
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 28, 22, 28),
       children: [
-        _buildFieldLabel('Vị trí', isRequired: true),
-        const SizedBox(height: 18),
-        _AppTextField(
-          controller: controller.nameController,
-          minLines: 1,
-          maxLines: 1,
-          hintText: 'Nhập chữ',
-        ),
-        const SizedBox(height: 34),
-        _buildFieldLabel('Địa chỉ', isRequired: true),
-        const SizedBox(height: 18),
-        _AppTextField(
-          controller: controller.descriptionController,
-          minLines: 1,
-          maxLines: 1,
-          hintText: 'Nhập chữ',
-        ),
-        const SizedBox(height: 34),
         _buildFieldLabel('Quốc gia'),
         const SizedBox(height: 18),
-        _AppTextField(
-          controller: controller.countryController,
-          minLines: 1,
-          maxLines: 1,
-          hintText: 'Việt Nam',
+        _SelectorField(
+          label: controller.countryController.text.trim().isEmpty
+              ? 'Chọn quốc gia'
+              : controller.countryController.text.trim(),
+          isLoading: controller.isLoadingCountries,
+          onTap: onSelectCountry,
         ),
         const SizedBox(height: 34),
         _buildFieldLabel('Thành phố'),
         const SizedBox(height: 18),
-        _AppTextField(
-          controller: controller.cityController,
-          minLines: 1,
-          maxLines: 1,
-          hintText: 'Nhập thành phố',
+        _SelectorField(
+          label: controller.cityController.text.trim().isEmpty
+              ? 'Chọn thành phố'
+              : controller.cityController.text.trim(),
+          isLoading: controller.isLoadingCities,
+          onTap: onSelectCity,
         ),
         const SizedBox(height: 34),
         _buildFieldLabel('Phường/Xã'),
         const SizedBox(height: 18),
-        _AppTextField(
-          controller: controller.wardController,
-          minLines: 1,
-          maxLines: 1,
-          hintText: 'Nhập phường/xã',
+        _SelectorField(
+          label: controller.wardController.text.trim().isEmpty
+              ? 'Chọn phường/xã'
+              : controller.wardController.text.trim(),
+          isLoading: controller.isLoadingWards,
+          onTap: onSelectWard,
         ),
         const SizedBox(height: 34),
         _buildFieldLabel('Địa chỉ chi tiết'),
@@ -458,6 +530,7 @@ class _AttendanceLocationEditorForm extends StatelessWidget {
           minLines: 2,
           maxLines: 3,
           hintText: 'Nhập địa chỉ tổng hợp',
+          readOnly: true,
         ),
         const SizedBox(height: 34),
         _buildFieldLabel('Chi nhánh', isRequired: true),
@@ -470,10 +543,6 @@ class _AttendanceLocationEditorForm extends StatelessWidget {
           onTap: onSelectBranch,
         ),
         const SizedBox(height: 34),
-        _buildFieldLabel('Chi nhánh phụ'),
-        const SizedBox(height: 18),
-        const _SelectorField(label: 'Chọn chi nhánh phụ'),
-        const SizedBox(height: 34),
         _buildFieldLabel('Phòng ban'),
         const SizedBox(height: 18),
         _SelectorField(
@@ -484,17 +553,15 @@ class _AttendanceLocationEditorForm extends StatelessWidget {
           onTap: onSelectDepartment,
         ),
         const SizedBox(height: 34),
-        _buildFieldLabel('Nhân viên'),
-        const SizedBox(height: 18),
-        const _SelectorField(label: 'Chọn nhân viên'),
-        const SizedBox(height: 34),
         _buildFieldLabel('Vĩ độ checkin'),
         const SizedBox(height: 18),
         _AppTextField(
           controller: controller.latitudeController,
           minLines: 1,
           maxLines: 1,
-          hintText: '10.842433',
+          hintText: controller.isResolvingCoordinates
+              ? 'Đang lấy vĩ độ...'
+              : '10.842433',
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
         ),
         const SizedBox(height: 34),
@@ -504,7 +571,9 @@ class _AttendanceLocationEditorForm extends StatelessWidget {
           controller: controller.longitudeController,
           minLines: 1,
           maxLines: 1,
-          hintText: '106.679459',
+          hintText: controller.isResolvingCoordinates
+              ? 'Đang lấy kinh độ...'
+              : '106.679459',
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
         ),
         const SizedBox(height: 34),
@@ -518,7 +587,13 @@ class _AttendanceLocationEditorForm extends StatelessWidget {
           keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 30),
-        const _MapPreviewCard(),
+        _LocationMapCard(
+          latitude: controller.mapLatitude,
+          longitude: controller.mapLongitude,
+          radiusMeters: controller.mapRadiusMeters,
+          isLocating: controller.isFetchingCurrentLocation,
+          onUseCurrentLocation: onUseCurrentLocation,
+        ),
       ],
     );
   }
@@ -706,6 +781,7 @@ class _AppTextField extends StatelessWidget {
     required this.maxLines,
     this.hintText,
     this.keyboardType,
+    this.readOnly = false,
   });
 
   final TextEditingController controller;
@@ -713,6 +789,7 @@ class _AppTextField extends StatelessWidget {
   final int maxLines;
   final String? hintText;
   final TextInputType? keyboardType;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -721,6 +798,7 @@ class _AppTextField extends StatelessWidget {
       minLines: minLines,
       maxLines: maxLines,
       keyboardType: keyboardType,
+      readOnly: readOnly,
       style: const TextStyle(
         fontSize: 17,
         color: Colors.black,
@@ -878,37 +956,99 @@ class _SelectorField extends StatelessWidget {
   }
 }
 
-class _MapPreviewCard extends StatelessWidget {
-  const _MapPreviewCard();
+class _LocationMapCard extends StatelessWidget {
+  const _LocationMapCard({
+    required this.latitude,
+    required this.longitude,
+    required this.radiusMeters,
+    required this.isLocating,
+    required this.onUseCurrentLocation,
+  });
+
+  final double? latitude;
+  final double? longitude;
+  final double radiusMeters;
+  final bool isLocating;
+  final Future<void> Function() onUseCurrentLocation;
 
   @override
   Widget build(BuildContext context) {
+    final hasCoordinates = latitude != null && longitude != null;
+    final target = LatLng(
+      latitude ?? 10.7769,
+      longitude ?? 106.7009,
+    );
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
       child: SizedBox(
-        height: 255,
+        height: 320,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Container(color: const Color(0xFFF3EEDC)),
-            CustomPaint(
-              painter: _MapPainter(),
-            ),
-            Center(
-              child: Container(
-                width: 220,
-                height: 220,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF9FFF5A).withValues(alpha: 0.32),
+            FlutterMap(
+              options: MapOptions(
+                initialCenter: target,
+                initialZoom: hasCoordinates ? 18.5 : 13,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.drag |
+                      InteractiveFlag.pinchZoom |
+                      InteractiveFlag.doubleTapZoom,
                 ),
               ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.example.b2msr',
+                ),
+                if (hasCoordinates)
+                  CircleLayer(
+                    circles: <CircleMarker>[
+                      CircleMarker(
+                        point: target,
+                        radius: radiusMeters / 3.5,
+                        useRadiusInMeter: true,
+                        color: const Color(0x669FFF5A),
+                        borderStrokeWidth: 2,
+                        borderColor: const Color(0x889FFF5A),
+                      ),
+                    ],
+                  ),
+                if (hasCoordinates)
+                  MarkerLayer(
+                    markers: <Marker>[
+                      Marker(
+                        point: target,
+                        width: 44,
+                        height: 44,
+                        child: const Icon(
+                          Icons.location_on_rounded,
+                          size: 44,
+                          color: Color(0xFFC61C1C),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
             ),
-            const Center(
-              child: Icon(
-                Icons.location_on_rounded,
-                size: 44,
-                color: Color(0xFFC61C1C),
+            Positioned(
+              right: 16,
+              bottom: 16,
+              child: FloatingActionButton.small(
+                heroTag: 'current-location-map-button',
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.primary,
+                onPressed: isLocating ? null : onUseCurrentLocation,
+                child: isLocating
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : const Icon(Icons.my_location_rounded),
               ),
             ),
           ],
@@ -916,68 +1056,4 @@ class _MapPreviewCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _MapPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final roadPaint = Paint()
-      ..color = const Color(0xFFD6D6D6)
-      ..strokeWidth = 16
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final lanePaint = Paint()
-      ..color = const Color(0xFFC9C9C9)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final blockPaint = Paint()
-      ..color = const Color(0xFFDDF2C5)
-      ..style = PaintingStyle.fill;
-
-    canvas.drawRect(
-      Rect.fromLTWH(size.width * 0.13, size.height * 0.12, 120, 90),
-      blockPaint,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(size.width * 0.56, size.height * 0.41, 96, 72),
-      blockPaint,
-    );
-
-    canvas.drawLine(
-      Offset(-20, size.height * 0.16),
-      Offset(size.width * 0.5, size.height * 0.73),
-      roadPaint,
-    );
-    canvas.drawLine(
-      Offset(size.width * 0.7, -20),
-      Offset(size.width * 0.25, size.height + 20),
-      roadPaint,
-    );
-    canvas.drawLine(
-      Offset(0, size.height * 0.7),
-      Offset(size.width, size.height * 0.7),
-      roadPaint,
-    );
-
-    for (double x = 16; x < size.width; x += 72) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x + 16, size.height),
-        lanePaint,
-      );
-    }
-
-    for (double y = 24; y < size.height; y += 60) {
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y + 12),
-        lanePaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -4,10 +4,17 @@ import 'core/routes/app_navigator.dart';
 import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'views/account/account_page.dart';
+import 'views/account/app_info_page.dart';
+import 'views/account/company_switch_page.dart';
 import 'views/account/company_directory_list_page.dart';
 import 'views/account/company_settings_page.dart';
+import 'views/account/employee_list_page.dart';
 import 'views/account/management_settings_page.dart';
+import 'views/account/notification_settings_page.dart';
 import 'views/account/region_settings_page.dart';
+import 'views/account/security_center_page.dart';
+import 'views/account/shift_list_page.dart';
+import 'views/account/language_settings_page.dart';
 import 'views/home/attendance_home_page.dart';
 import 'views/home/work_dashboard_page.dart';
 import 'views/login/login_page.dart';
@@ -34,6 +41,13 @@ class MyApp extends StatelessWidget {
         AppRoutes.account: (_) => const AccountPage(),
         AppRoutes.managementSettings: (_) => const ManagementSettingsPage(),
         AppRoutes.companySettings: (_) => const CompanySettingsPage(),
+        AppRoutes.employeeSettings: (_) => const EmployeeListPage(),
+        AppRoutes.shiftSettings: (_) => const ShiftListPage(),
+        AppRoutes.languageSettings: (_) => const LanguageSettingsPage(),
+        AppRoutes.notificationSettings: (_) => const NotificationSettingsPage(),
+        AppRoutes.companySwitch: (_) => const CompanySwitchPage(),
+        AppRoutes.appInfo: (_) => const AppInfoPage(),
+        AppRoutes.securityCenter: (_) => const SecurityCenterPage(),
         AppRoutes.regionSettings: (_) => const RegionSettingsPage(),
         AppRoutes.branchSettings: (_) => const CompanyDirectoryListPage(
               title: 'Chi nhánh',

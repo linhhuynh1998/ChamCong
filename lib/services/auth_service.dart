@@ -95,6 +95,12 @@ class AuthService {
     }
   }
 
+  Future<void> refreshAppState() async {
+    _cachedProfile = null;
+    _cachedProfileAt = null;
+    await _sessionService.clearProfileCache();
+  }
+
   Future<String?> getSavedToken() {
     return _sessionService.getToken();
   }

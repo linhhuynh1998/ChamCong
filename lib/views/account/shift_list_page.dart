@@ -1,35 +1,25 @@
 import 'package:flutter/material.dart';
 
-import '../../controllers/company_directory_list_controller.dart';
+import '../../controllers/shift_list_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/primary_section_app_bar.dart';
-import '../../models/company_directory_item.dart';
-import 'company_directory_form_page.dart';
+import '../../models/shift_item.dart';
+import 'shift_form_page.dart';
 
-class CompanyDirectoryListPage extends StatefulWidget {
-  const CompanyDirectoryListPage({
-    super.key,
-    required this.title,
-    required this.endpoint,
-    this.requiresRegionId = false,
-  });
-
-  final String title;
-  final String endpoint;
-  final bool requiresRegionId;
+class ShiftListPage extends StatefulWidget {
+  const ShiftListPage({super.key});
 
   @override
-  State<CompanyDirectoryListPage> createState() =>
-      _CompanyDirectoryListPageState();
+  State<ShiftListPage> createState() => _ShiftListPageState();
 }
 
-class _CompanyDirectoryListPageState extends State<CompanyDirectoryListPage> {
-  late final CompanyDirectoryListController _controller;
+class _ShiftListPageState extends State<ShiftListPage> {
+  late final ShiftListController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = CompanyDirectoryListController(endpoint: widget.endpoint);
+    _controller = ShiftListController();
   }
 
   @override
@@ -38,20 +28,15 @@ class _CompanyDirectoryListPageState extends State<CompanyDirectoryListPage> {
     super.dispose();
   }
 
-  Future<void> _openForm({CompanyDirectoryItem? item}) async {
+  Future<void> _openForm({ShiftItem? item}) async {
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
-        builder: (_) => CompanyDirectoryFormPage(
-          title: widget.title.toLowerCase(),
-          endpoint: widget.endpoint,
-          requiresRegionId: widget.requiresRegionId,
-          initialItem: item,
-        ),
+        builder: (_) => ShiftFormPage(initialItem: item),
       ),
     );
 
     if (changed == true) {
-      await _controller.loadItems();
+      await _controller.loadShifts();
     }
   }
 
@@ -60,7 +45,7 @@ class _CompanyDirectoryListPageState extends State<CompanyDirectoryListPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PrimarySectionAppBar(
-        title: widget.title,
+        title: 'Xếp ca',
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         showBottomDivider: false,
@@ -100,10 +85,10 @@ class _CompanyDirectoryListPageState extends State<CompanyDirectoryListPage> {
             }
 
             if (_controller.items.isEmpty) {
-              return Center(
+              return const Center(
                 child: Text(
-                  'Chưa có ${widget.title.toLowerCase()} nào.',
-                  style: const TextStyle(
+                  'Chưa có xếp ca nào.',
+                  style: TextStyle(
                     fontSize: 16,
                     color: AppColors.muted,
                   ),
@@ -112,7 +97,7 @@ class _CompanyDirectoryListPageState extends State<CompanyDirectoryListPage> {
             }
 
             return RefreshIndicator(
-              onRefresh: _controller.loadItems,
+              onRefresh: _controller.loadShifts,
               child: ListView.separated(
                 itemCount: _controller.items.length,
                 separatorBuilder: (_, __) => const Divider(
@@ -122,7 +107,7 @@ class _CompanyDirectoryListPageState extends State<CompanyDirectoryListPage> {
                 ),
                 itemBuilder: (context, index) {
                   final item = _controller.items[index];
-                  return _CompanyDirectoryTile(
+                  return _ShiftTile(
                     item: item,
                     onTap: () => _openForm(item: item),
                   );
@@ -136,25 +121,23 @@ class _CompanyDirectoryListPageState extends State<CompanyDirectoryListPage> {
   }
 }
 
-class _CompanyDirectoryTile extends StatelessWidget {
-  const _CompanyDirectoryTile({
+class _ShiftTile extends StatelessWidget {
+  const _ShiftTile({
     required this.item,
     required this.onTap,
   });
 
-  final CompanyDirectoryItem item;
+  final ShiftItem item;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final subtitleParts = <String>[
-      if (item.regionName != null && item.regionName!.trim().isNotEmpty)
-        'Vùng: ${item.regionName}',
-      if (item.regionId != null &&
-          item.regionId!.trim().isNotEmpty &&
-          (item.regionName == null || item.regionName!.trim().isEmpty))
-        'Mã vùng: ${item.regionId}',
-      if (item.description.trim().isNotEmpty) item.description.trim(),
+      item.timeRange,
+      if ((item.regionName ?? '').trim().isNotEmpty) 'Vùng: ${item.regionName}',
+      if ((item.branchName ?? '').trim().isNotEmpty)
+        'Chi nhánh: ${item.branchName}',
+      if (item.weekdays.isNotEmpty) 'Ngày: ${_weekdayText(item.weekdays)}',
     ];
 
     return Material(
@@ -166,27 +149,25 @@ class _CompanyDirectoryTile extends StatelessWidget {
           child: ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(
-              item.name.isEmpty ? 'Không có tên' : item.name,
+              item.name,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w400,
                 color: AppColors.textPrimary,
               ),
             ),
-            subtitle: subtitleParts.isEmpty
-                ? null
-                : Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      subtitleParts.join(' • '),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.muted,
-                      ),
-                    ),
-                  ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                subtitleParts.join(' • '),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.muted,
+                ),
+              ),
+            ),
             trailing: const Icon(
               Icons.chevron_right_rounded,
               color: AppColors.textPrimary,
@@ -196,5 +177,21 @@ class _CompanyDirectoryTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _weekdayText(List<int> weekdays) {
+    const labels = <int, String>{
+      1: 'T2',
+      2: 'T3',
+      3: 'T4',
+      4: 'T5',
+      5: 'T6',
+      6: 'T7',
+      7: 'CN',
+    };
+
+    return weekdays
+        .map((value) => labels[value] ?? value.toString())
+        .join(', ');
   }
 }

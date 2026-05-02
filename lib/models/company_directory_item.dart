@@ -43,19 +43,44 @@ class CompanyDirectoryItem {
     final department = _asMap(json['department']);
 
     return CompanyDirectoryItem(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
+      id: _pickFirstString(json, const [
+            'id',
+            'region_id',
+            'branch_id',
+            'department_id',
+            'job_title_id',
+            'position_id',
+            'default_branch_id',
+            'default_department_id',
+          ]) ??
+          '',
+      name: _pickFirstString(json, const [
+            'name',
+            'title',
+            'job_title',
+            'department_name',
+            'branch_name',
+            'region_name',
+          ]) ??
+          json['address']?.toString() ??
+          json['full_address']?.toString() ??
+          '',
       description: json['description']?.toString() ??
+          json['address']?.toString() ??
           json['note']?.toString() ??
           '',
       regionId: json['region_id']?.toString() ?? region?['id']?.toString(),
       regionName: region?['name']?.toString(),
-      branchId: json['branch_id']?.toString() ?? branch?['id']?.toString(),
+      branchId: json['branch_id']?.toString() ??
+          json['default_branch_id']?.toString() ??
+          branch?['id']?.toString(),
       branchName: branch?['name']?.toString(),
-      departmentId:
-          json['department_id']?.toString() ?? department?['id']?.toString(),
+      departmentId: json['department_id']?.toString() ??
+          json['default_department_id']?.toString() ??
+          department?['id']?.toString(),
       departmentName: department?['name']?.toString(),
       country: _pickFirstString(json, const [
+        'countries',
         'country',
         'country_name',
       ]),

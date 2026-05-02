@@ -42,6 +42,9 @@ class CompanySettingsPage extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: const PrimarySectionAppBar(
         title: 'Công ty',
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        showBottomDivider: false,
       ),
       body: SafeArea(
         child: ListView.separated(
@@ -71,33 +74,32 @@ class _CompanySettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedOnTap = item.onTap ??
-        () {
-          switch (item.title) {
-            case 'Vùng':
-              Navigator.of(context).pushNamed(AppRoutes.regionSettings);
-              break;
-            case 'Chi nhánh':
-              Navigator.of(context).pushNamed(AppRoutes.branchSettings);
-              break;
-            case 'Chức vụ':
-              Navigator.of(context).pushNamed(AppRoutes.jobTitleSettings);
-              break;
-            case 'Phòng ban':
-              Navigator.of(context).pushNamed(AppRoutes.departmentSettings);
-              break;
-            case 'Vị trí chấm công':
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const CompanyDirectoryFormPage(
-                    title: 'Vị trí chấm công',
-                    endpoint: '/company/attendance-location',
-                  ),
-                ),
-              );
-              break;
-          }
-        };
+    void resolvedOnTap() {
+      switch (item.title) {
+        case 'Vùng':
+          Navigator.of(context).pushNamed(AppRoutes.regionSettings);
+          break;
+        case 'Chi nhánh':
+          Navigator.of(context).pushNamed(AppRoutes.branchSettings);
+          break;
+        case 'Chức vụ':
+          Navigator.of(context).pushNamed(AppRoutes.jobTitleSettings);
+          break;
+        case 'Phòng ban':
+          Navigator.of(context).pushNamed(AppRoutes.departmentSettings);
+          break;
+        case 'Vị trí chấm công':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const CompanyDirectoryFormPage(
+                title: 'Vị trí chấm công',
+                endpoint: '/company/location',
+              ),
+            ),
+          );
+          break;
+      }
+    }
 
     return Material(
       color: Colors.transparent,
@@ -142,11 +144,9 @@ class _CompanySettingItem {
     required this.title,
     required this.icon,
     required this.color,
-    this.onTap,
   });
 
   final String title;
   final IconData icon;
   final Color color;
-  final VoidCallback? onTap;
 }

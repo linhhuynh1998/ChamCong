@@ -91,6 +91,58 @@ class LocationService {
     return snapshot;
   }
 
+  Future<
+      ({
+        String address,
+        String country,
+        String city,
+        String ward,
+        String street,
+        double latitude,
+        double longitude,
+      })> getCurrentLocationDetails() async {
+    final permission = await _ensurePermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      throw ApiException('Ung dung chua duoc cap quyen vi tri.');
+    }
+
+    await _ensurePreciseLocationIfNeeded();
+
+    final currentPosition = await Geolocator.getCurrentPosition(
+      locationSettings: _buildLocationSettings(),
+    );
+
+    final placemarks = await placemarkFromCoordinates(
+      currentPosition.latitude,
+      currentPosition.longitude,
+    );
+
+    if (placemarks.isEmpty) {
+      throw ApiException('Không xác định được vị trí hiện tại.');
+    }
+
+    final placemark = placemarks.first;
+    final country = placemark.isoCountryCode?.trim().isNotEmpty == true
+        ? placemark.isoCountryCode!.trim()
+        : (placemark.country ?? '').trim();
+    final city = (placemark.locality ?? placemark.administrativeArea ?? '').trim();
+    final ward = (placemark.subLocality ?? placemark.subAdministrativeArea ?? '')
+        .trim();
+    final street = (placemark.street ?? '').trim();
+    final address = _buildAddressFromPlacemark(placemark);
+
+    return (
+      address: address,
+      country: country,
+      city: city,
+      ward: ward,
+      street: street,
+      latitude: currentPosition.latitude,
+      longitude: currentPosition.longitude,
+    );
+  }
+
   Future<LocationPermission> _ensurePermission() async {
     final isEnabled = await Geolocator.isLocationServiceEnabled();
     if (!isEnabled) {
@@ -139,7 +191,10 @@ class LocationService {
       return 'Không xác định được địa chỉ hiện tại.';
     }
 
-    final placemark = placemarks.first;
+    return _buildAddressFromPlacemark(placemarks.first);
+  }
+
+  String _buildAddressFromPlacemark(Placemark placemark) {
     final parts = <String?>[
       placemark.street,
       placemark.subLocality,
