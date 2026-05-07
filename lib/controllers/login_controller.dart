@@ -5,20 +5,25 @@ import '../core/routes/app_routes.dart';
 import '../core/widgets/app_loading.dart';
 import '../core/widgets/app_notice.dart';
 import '../services/auth_service.dart';
+import '../services/biometric_credentials_service.dart';
 import '../services/biometric_service.dart';
 
 class LoginController extends ChangeNotifier {
   LoginController({
     AuthService? authService,
     BiometricService? biometricService,
+    BiometricCredentialsService? credentialsService,
   })
       : _authService = authService ?? AuthService(),
         _biometricService = biometricService ?? BiometricService(),
+        _credentialsService =
+            credentialsService ?? BiometricCredentialsService(),
         emailController = TextEditingController(),
         passwordController = TextEditingController();
 
   final AuthService _authService;
   final BiometricService _biometricService;
+  final BiometricCredentialsService _credentialsService;
   final TextEditingController emailController;
   final TextEditingController passwordController;
 
@@ -53,6 +58,10 @@ class LoginController extends ChangeNotifier {
         email: email,
         password: password,
       );
+      await _credentialsService.saveCredentials(
+        email: email,
+        password: password,
+      );
 
       if (!context.mounted) {
         return;
@@ -83,12 +92,13 @@ class LoginController extends ChangeNotifier {
       return;
     }
 
+    final savedCredentials = await _credentialsService.getCredentials();
     final hasSession = await hasSavedSession();
-    if (!hasSession) {
+    if (savedCredentials == null && !hasSession) {
       if (context.mounted) {
         AppNotice.showInfo(
           context,
-          'Hãy đăng nhập bằng email trước để lưu phiên cho lần sau.',
+          'Hãy đăng nhập bằng email và mật khẩu trước để bật đăng nhập nhanh.',
         );
       }
       return;
@@ -105,6 +115,13 @@ class LoginController extends ChangeNotifier {
           AppNotice.showError(context, 'Xác thực thất bại hoặc đã bị hủy.');
         }
         return;
+      }
+
+      if (savedCredentials != null) {
+        await _authService.login(
+          email: savedCredentials.email,
+          password: savedCredentials.password,
+        );
       }
 
       if (!context.mounted) {

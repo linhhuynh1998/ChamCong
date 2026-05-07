@@ -1,10 +1,10 @@
 {
-  "v": 11,
+  "v": 12,
   "id": "cmny2ydo0208req1ltcbia3qn",
   "name": "ChamCong API",
   "folders": [
     {
-      "v": 11,
+      "v": 12,
       "id": "cmny2yk1g208ueq1l527xs7c6",
       "name": "Login",
       "folders": [],
@@ -81,10 +81,12 @@
       },
       "headers": [],
       "variables": [],
-      "description": null
+      "description": null,
+      "preRequestScript": "",
+      "testScript": ""
     },
     {
-      "v": 11,
+      "v": 12,
       "id": "cmny4l06y35h7gb1lnawq0jja",
       "name": "CheckIn or CheckOut",
       "folders": [],
@@ -162,10 +164,12 @@
       },
       "headers": [],
       "variables": [],
-      "description": null
+      "description": null,
+      "preRequestScript": "",
+      "testScript": ""
     },
     {
-      "v": 11,
+      "v": 12,
       "id": "cmnzkaune4uacgb1lvz5bvoir",
       "name": "Region",
       "folders": [],
@@ -265,10 +269,12 @@
       },
       "headers": [],
       "variables": [],
-      "description": null
+      "description": null,
+      "preRequestScript": "",
+      "testScript": ""
     },
     {
-      "v": 11,
+      "v": 12,
       "id": "cmnznt12d4uy4gb1lih3unryu",
       "name": "Branches",
       "folders": [],
@@ -372,10 +378,12 @@
       },
       "headers": [],
       "variables": [],
-      "description": null
+      "description": null,
+      "preRequestScript": "",
+      "testScript": ""
     },
     {
-      "v": 11,
+      "v": 12,
       "id": "cmnzo8nak4v0ogb1lhmtlxs0b",
       "name": "Departments",
       "folders": [],
@@ -479,10 +487,12 @@
       },
       "headers": [],
       "variables": [],
-      "description": null
+      "description": null,
+      "preRequestScript": "",
+      "testScript": ""
     },
     {
-      "v": 11,
+      "v": 12,
       "id": "cmnzodg084v1cgb1lnog10579",
       "name": "Job Titles",
       "folders": [],
@@ -586,10 +596,12 @@
       },
       "headers": [],
       "variables": [],
-      "description": null
+      "description": null,
+      "preRequestScript": "",
+      "testScript": ""
     },
     {
-      "v": 11,
+      "v": 12,
       "id": "cmo28cq4w14b9gb1lez7v5jhm",
       "name": "Location",
       "folders": [],
@@ -778,10 +790,12 @@
       },
       "headers": [],
       "variables": [],
-      "description": null
+      "description": null,
+      "preRequestScript": "",
+      "testScript": ""
     },
     {
-      "v": 11,
+      "v": 12,
       "id": "cmo6zsvyj6uvgeq1ljreti0ft",
       "name": "Employee",
       "folders": [],
@@ -903,10 +917,12 @@
       },
       "headers": [],
       "variables": [],
-      "description": null
+      "description": null,
+      "preRequestScript": "",
+      "testScript": ""
     },
     {
-      "v": 11,
+      "v": 12,
       "id": "cmo7yd1ti1qvpgb1m0p3p7da4",
       "name": "Permission Group",
       "folders": [],
@@ -940,10 +956,12 @@
       },
       "headers": [],
       "variables": [],
-      "description": null
+      "description": null,
+      "preRequestScript": "",
+      "testScript": ""
     },
     {
-      "v": 11,
+      "v": 12,
       "id": "cmo7z0gww1qyigb1mrei2hs9a",
       "name": "Shifts",
       "folders": [],
@@ -953,6 +971,28 @@
           "name": "Shifts",
           "method": "GET",
           "endpoint": "<<base_url>>/attendance/shifts",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Shifts Detail",
+          "method": "GET",
+          "endpoint": "<<base_url>>/attendance/shifts/<<id>>",
           "params": [],
           "headers": [],
           "preRequestScript": "",
@@ -1042,7 +1082,362 @@
       },
       "headers": [],
       "variables": [],
-      "description": null
+      "description": null,
+      "preRequestScript": "",
+      "testScript": ""
+    },
+    {
+      "v": 12,
+      "id": "cmos3rq6z1kydh01l2rv8wbhc",
+      "name": "Requests",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "name": "Request",
+          "method": "GET",
+          "endpoint": "<<base_url>>/requests",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request Create",
+          "method": "POST",
+          "endpoint": "<<base_url>>/requests",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"company_id\": 1,\n  \"request_type\": \"Nghỉ phép\",\n  \"employee_id\": 5,\n  \"fields\": {\n    \"Nhân viên\": \"Nguyễn Văn A\",\n    \"Loại\": \"Có lương\",\n    \"Loại nghỉ phép\": \"Nghỉ phép năm\",\n    \"Ngày bắt đầu\": \"2026-05-06\",\n    \"Ca làm\": \"Ca hành chính\",\n    \"Lý do\": \"Việc cá nhân\"\n  },\n  \"details\": []\n}"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request Status",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/requests/status",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"company_id\": 1,\n  \"ids\": [10],\n  \"status\": \"approved\"\n}"
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Types",
+          "method": "GET",
+          "endpoint": "<<base_url>>/requests/types",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Advance Types",
+          "method": "GET",
+          "endpoint": "<<base_url>>/requests/advance-types",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Advance Types",
+          "method": "POST",
+          "endpoint": "<<base_url>>/requests/advance-types",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "multipart/form-data",
+            "body": [
+              {
+                "key": "name",
+                "active": true,
+                "isFile": false,
+                "value": "Tạm ứng công tác"
+              }
+            ]
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Advance Types - Update",
+          "method": "DELETE",
+          "endpoint": "<<base_url>>/requests/advance-types/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Advance Types - Delete",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/requests/advance-types/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "multipart/form-data",
+            "body": [
+              {
+                "key": "name",
+                "active": true,
+                "isFile": false,
+                "value": "Tạm ứng công tác"
+              }
+            ]
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Reward Types",
+          "method": "GET",
+          "endpoint": "<<base_url>>/requests/reward-types",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Reward Types",
+          "method": "POST",
+          "endpoint": "<<base_url>>/requests/reward-types",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "multipart/form-data",
+            "body": [
+              {
+                "key": "name",
+                "active": true,
+                "isFile": false,
+                "value": "Thưởng chuyên cần"
+              }
+            ]
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Reward Types - Update",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/requests/reward-types/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "multipart/form-data",
+            "body": [
+              {
+                "key": "name",
+                "active": true,
+                "isFile": false,
+                "value": "Thưởng chuyên cần"
+              }
+            ]
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Reward Types - Delete",
+          "method": "DELETE",
+          "endpoint": "<<base_url>>/requests/reward-types/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Detail",
+          "method": "GET",
+          "endpoint": "<<base_url>>/requests/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Detail - Delete",
+          "method": "DELETE",
+          "endpoint": "<<base_url>>/requests/<<id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null,
+      "preRequestScript": "",
+      "testScript": ""
     }
   ],
   "requests": [],
@@ -1052,5 +1447,7 @@
   },
   "headers": [],
   "variables": [],
-  "description": null
+  "description": null,
+  "preRequestScript": "",
+  "testScript": ""
 }

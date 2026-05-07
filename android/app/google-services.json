@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "282200495325",
+    "project_id": "cham-cong-2c8e3",
+    "storage_bucket": "cham-cong-2c8e3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:282200495325:android:3e569acadd1f41e958f734",
+        "android_client_info": {
+          "package_name": "com.chamcong.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDc1tArVeUsvsC-zA2krfj0VA3hx5gh5XU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

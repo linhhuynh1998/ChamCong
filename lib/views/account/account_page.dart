@@ -166,6 +166,28 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  bool _canViewManagementItems(EmployeeProfile? profile) {
+    final role = profile?.role.trim().toLowerCase() ?? '';
+    if (role.isEmpty) {
+      return false;
+    }
+
+    return const <String>{
+      'admin',
+      'administrator',
+      'company',
+      'owner',
+      'manager',
+      'super_admin',
+      'superadmin',
+      'hr',
+      'quan ly',
+      'quan_ly',
+      'quản lý',
+      'quản_lý',
+    }.contains(role);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -175,6 +197,7 @@ class _AccountPageState extends State<AccountPage> {
           animation: _controller,
           builder: (context, _) {
             final profile = _controller.profile;
+            final canViewManagementItems = _canViewManagementItems(profile);
 
             return RefreshIndicator(
               onRefresh: () => _controller.loadProfile(forceRefresh: true),
@@ -191,8 +214,10 @@ class _AccountPageState extends State<AccountPage> {
                   const SizedBox(height: 14),
                   _AccountIdentity(profile: profile),
                   const SizedBox(height: 28),
-                  _AccountMenuSection(items: _managementItems),
-                  const SizedBox(height: 18),
+                  if (canViewManagementItems) ...[
+                    _AccountMenuSection(items: _managementItems),
+                    const SizedBox(height: 18),
+                  ],
                   _AccountMenuSection(
                     items: _settingItems,
                     onItemTap: (item) async {

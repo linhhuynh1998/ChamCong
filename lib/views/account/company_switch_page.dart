@@ -23,12 +23,6 @@ class _CompanySwitchPageState extends State<CompanySwitchPage> {
       active: true,
     ),
     (
-      id: 'kimlong',
-      name: 'Kim Long Store',
-      subtitle: 'Môi trường quản lý bán lẻ và chấm công cửa hàng',
-      active: false,
-    ),
-    (
       id: 'internal',
       name: 'Internal Operations',
       subtitle: 'Không gian thử nghiệm nội bộ cho cấu hình và báo cáo',

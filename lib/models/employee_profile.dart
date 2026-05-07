@@ -8,6 +8,7 @@ class EmployeeProfile {
     required this.department,
     required this.jobTitle,
     required this.companyName,
+    required this.companyId,
     required this.companyAddress,
     required this.companyLatitude,
     required this.companyLongitude,
@@ -22,6 +23,7 @@ class EmployeeProfile {
   final String department;
   final String jobTitle;
   final String companyName;
+  final String companyId;
   final String companyAddress;
   final double? companyLatitude;
   final double? companyLongitude;
@@ -36,6 +38,7 @@ class EmployeeProfile {
       'role': role,
       'department': department,
       'job_title': jobTitle,
+      'company_id': companyId,
       'company_name': companyName,
       'company_address': companyAddress,
       'company_latitude': companyLatitude,
@@ -68,6 +71,10 @@ class EmployeeProfile {
       companyName: company?['name']?.toString() ??
           map['company']?.toString() ??
           map['company_name']?.toString() ??
+          '',
+      companyId: company?['id']?.toString() ??
+          map['company_id']?.toString() ??
+          map['companyId']?.toString() ??
           '',
       companyAddress: addressSource['company_address']?.toString() ??
           addressSource['address']?.toString() ??

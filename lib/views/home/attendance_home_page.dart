@@ -169,41 +169,42 @@ class _AttendanceHomePageState extends State<AttendanceHomePage> {
                     isSubmitting: _controller.isSubmitting,
                     isEnabled: canSubmitAttendance,
                     onTap: _controller.isLoading ||
-                        _controller.isSubmitting ||
-                        !canSubmitAttendance
-                    ? null
-                    : () async {
-                        final isCheckout = hasCheckedIn && !hasCheckedOut;
-                        final reason = await _promptAttendanceReasonIfNeeded(
-                          context,
-                          isCheckout: isCheckout,
-                        );
-                        if (!context.mounted) {
-                          return;
-                        }
-                        if (reason == _reasonDialogCancelled) {
-                          AppNotice.showError(
-                            context,
-                            'Bạn chưa nhập lý do!',
-                          );
-                          return;
-                        }
-                        final message = isCheckout
-                            ? await _controller.submitCheckOut(
-                                reason: reason,
-                              )
-                            : await _controller.submitCheckIn(
-                                reason: reason,
+                            _controller.isSubmitting ||
+                            !canSubmitAttendance
+                        ? null
+                        : () async {
+                            final isCheckout = hasCheckedIn && !hasCheckedOut;
+                            final reason =
+                                await _promptAttendanceReasonIfNeeded(
+                              context,
+                              isCheckout: isCheckout,
+                            );
+                            if (!context.mounted) {
+                              return;
+                            }
+                            if (reason == _reasonDialogCancelled) {
+                              AppNotice.showError(
+                                context,
+                                'Bạn chưa nhập lý do!',
                               );
-                        if (!context.mounted) {
-                          return;
-                        }
-                        if (_controller.lastActionSucceeded) {
-                          AppNotice.showSuccess(context, message);
-                        } else {
-                          AppNotice.showError(context, message);
-                        }
-                      },
+                              return;
+                            }
+                            final message = isCheckout
+                                ? await _controller.submitCheckOut(
+                                    reason: reason,
+                                  )
+                                : await _controller.submitCheckIn(
+                                    reason: reason,
+                                  );
+                            if (!context.mounted) {
+                              return;
+                            }
+                            if (_controller.lastActionSucceeded) {
+                              AppNotice.showSuccess(context, message);
+                            } else {
+                              AppNotice.showError(context, message);
+                            }
+                          },
                   ),
                   const SizedBox(height: 24),
                   const _SectionTitle(title: 'Thư Mục'),
@@ -226,7 +227,9 @@ class _AttendanceHomePageState extends State<AttendanceHomePage> {
                           Color(0xFF7FD0F1),
                           Color(0xFF72A9FF),
                         ],
-                        onTap: () {},
+                        onTap: () => Navigator.of(context).pushNamed(
+                          AppRoutes.requestManagement,
+                        ),
                       ),
                       _DashboardTile(
                         title: 'Chấm Công',
@@ -530,11 +533,11 @@ class _ScheduleCard extends StatelessWidget {
             Text(
               weekday,
               style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF979797),
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF979797),
+              ),
             ),
-          ),
             Text(
               day,
               style: TextStyle(
@@ -580,8 +583,9 @@ class _CheckInHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final biometricIcon =
-        Platform.isIOS ? Icons.face_retouching_natural : Icons.fingerprint_rounded;
+    final biometricIcon = Platform.isIOS
+        ? Icons.face_retouching_natural
+        : Icons.fingerprint_rounded;
 
     return Material(
       color: Colors.transparent,
@@ -591,9 +595,8 @@ class _CheckInHeroCard extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.fromLTRB(15, 15, 15, 15),
           decoration: BoxDecoration(
-            color: isEnabled
-                ? const Color(0xFF7ED286)
-                : const Color(0xFFC9D4CC),
+            color:
+                isEnabled ? const Color(0xFF7ED286) : const Color(0xFFC9D4CC),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
@@ -825,7 +828,6 @@ class _DashboardTile extends StatelessWidget {
   }
 }
 
-
 bool _hasRecordedCheckIn(String statusMessage) {
   final normalized = statusMessage.toLowerCase();
   return normalized.contains('Vào Ca') ||
@@ -840,19 +842,18 @@ Future<String?> _promptAttendanceReasonIfNeeded(
   required bool isCheckout,
 }) async {
   final now = TimeOfDay.now();
-  final needsLateReason = !isCheckout &&
-      (now.hour > 8 || (now.hour == 8 && now.minute > 0));
-  final needsEarlyCheckoutReason = isCheckout &&
-      (now.hour < 17 || (now.hour == 17 && now.minute < 30));
+  final needsLateReason =
+      !isCheckout && (now.hour > 8 || (now.hour == 8 && now.minute > 0));
+  final needsEarlyCheckoutReason =
+      isCheckout && (now.hour < 17 || (now.hour == 17 && now.minute < 30));
 
   if (!needsLateReason && !needsEarlyCheckoutReason) {
     return null;
   }
 
   final title = needsLateReason ? 'Lý do đi muộn' : 'Lý do rời ca sớm';
-  final hint = needsLateReason
-      ? 'Nhập lý do vào ca muộn'
-      : 'Nhập lý do rời ca sớm';
+  final hint =
+      needsLateReason ? 'Nhập lý do vào ca muộn' : 'Nhập lý do rời ca sớm';
   var reasonText = '';
 
   final result = await showDialog<String>(
@@ -1156,9 +1157,9 @@ String _buildActionTimeText({
   if (isFutureSelected) {
     return _formatDisplayDate(DateTime.now().add(const Duration(days: 1)))
         .replaceFirst(
-          _formatDisplayDate(DateTime.now().add(const Duration(days: 1))),
-          'Chưa đến lịch',
-        );
+      _formatDisplayDate(DateTime.now().add(const Duration(days: 1))),
+      'Chưa đến lịch',
+    );
   }
 
   if (!isTodaySelected) {
@@ -1174,7 +1175,9 @@ String _buildActionTimeText({
     return 'Chưa có bản ghi';
   }
 
-  if (_isBeforeCheckInWindow(selectedRecord) && !hasCheckedIn && !hasCheckedOut) {
+  if (_isBeforeCheckInWindow(selectedRecord) &&
+      !hasCheckedIn &&
+      !hasCheckedOut) {
     final shiftStart = _resolveShiftStart(selectedRecord);
     final checkInWindowStart = _resolveCheckInWindowStart(selectedRecord);
     return 'Ca ${_formatTimeOfDay(shiftStart)}, chấm công từ ${_formatTimeOfDay(checkInWindowStart)}';

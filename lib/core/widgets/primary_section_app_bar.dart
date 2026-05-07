@@ -8,9 +8,9 @@ class PrimarySectionAppBar extends StatelessWidget
     super.key,
     required this.title,
     this.actions,
-    this.showBottomDivider = true,
-    this.backgroundColor = Colors.white,
-    this.foregroundColor = AppColors.sectionHeader,
+    this.showBottomDivider = false,
+    this.backgroundColor = AppColors.primary,
+    this.foregroundColor = Colors.white,
     this.bottomDividerColor = AppColors.divider,
   });
 
@@ -20,6 +20,26 @@ class PrimarySectionAppBar extends StatelessWidget
   final Color backgroundColor;
   final Color foregroundColor;
   final Color bottomDividerColor;
+
+  static final ButtonStyle actionButtonStyle = TextButton.styleFrom(
+    foregroundColor: Colors.white,
+    minimumSize: const Size(68, 44),
+    fixedSize: const Size(68, 44),
+    padding: EdgeInsets.zero,
+    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10),
+    ),
+    textStyle: const TextStyle(
+      fontSize: 22,
+      fontWeight: FontWeight.w600,
+    ),
+  );
+
+  static const TextStyle actionTextStyle = TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.w600,
+  );
 
   @override
   Size get preferredSize => const Size.fromHeight(88);

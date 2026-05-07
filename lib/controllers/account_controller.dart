@@ -3,15 +3,20 @@ import 'package:flutter/material.dart';
 import '../core/network/api_exception.dart';
 import '../models/employee_profile.dart';
 import '../services/auth_service.dart';
+import '../services/biometric_credentials_service.dart';
 
 class AccountController extends ChangeNotifier {
   AccountController({
     AuthService? authService,
-  }) : _authService = authService ?? AuthService() {
+    BiometricCredentialsService? credentialsService,
+  })  : _authService = authService ?? AuthService(),
+        _credentialsService =
+            credentialsService ?? BiometricCredentialsService() {
     loadProfile();
   }
 
   final AuthService _authService;
+  final BiometricCredentialsService _credentialsService;
 
   bool _isLoading = false;
   bool _isSubmitting = false;
@@ -51,6 +56,7 @@ class AccountController extends ChangeNotifier {
 
     try {
       await _authService.logout();
+      await _credentialsService.clearCredentials();
       _lastActionSucceeded = true;
       _statusMessage = 'Đã đăng xuất.';
     } on ApiException catch (error) {

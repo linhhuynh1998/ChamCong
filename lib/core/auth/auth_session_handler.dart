@@ -11,7 +11,7 @@ class AuthSessionHandler {
   static bool _isHandlingUnauthorized = false;
 
   static Future<void> handleUnauthorized({
-    String message = 'Phien dang nhap da het han. Vui long dang nhap lai.',
+    String message = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
   }) async {
     if (_isHandlingUnauthorized) {
       return;
