@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:b2msr/services/region_service.dart';
 
 import '../core/network/api_exception.dart';
 import '../models/region_item.dart';
+import '../services/region_service.dart';
 
 class RegionListController extends ChangeNotifier {
   RegionListController({

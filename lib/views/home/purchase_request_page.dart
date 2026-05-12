@@ -14,6 +14,7 @@ import '../../models/location_option.dart';
 import '../../services/auth_service.dart';
 import '../../services/employee_directory_service.dart';
 import '../../services/requests_service.dart';
+import '../../services/request_employee_access.dart';
 
 class PurchaseRequestPage extends StatefulWidget {
   const PurchaseRequestPage({super.key});
@@ -38,8 +39,11 @@ class _PurchaseRequestPageState extends State<PurchaseRequestPage> {
 
   bool _isSubmitting = false;
   bool _isLoadingEmployees = false;
+  bool _canSelectEmployee = false;
   List<EmployeeListItem> _employees = [];
-  final List<_PurchaseDetailControllers> _details = [_PurchaseDetailControllers()];
+  final List<_PurchaseDetailControllers> _details = [
+    _PurchaseDetailControllers()
+  ];
 
   final List<LocationOption> _purchaseTypes = const [
     LocationOption(id: 'van_phong_pham', name: 'Văn phòng phẩm'),
@@ -51,7 +55,7 @@ class _PurchaseRequestPageState extends State<PurchaseRequestPage> {
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
-    _loadEmployees();
+    _loadCurrentEmployee();
   }
 
   @override
@@ -61,6 +65,36 @@ class _PurchaseRequestPageState extends State<PurchaseRequestPage> {
       d.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _loadCurrentEmployee() async {
+    setState(() => _isLoadingEmployees = true);
+    try {
+      final profile = await _authService.me();
+      if (!mounted) return;
+
+      final canSelectEmployee =
+          RequestEmployeeAccess.canSelectEmployee(profile);
+      setState(() {
+        _canSelectEmployee = canSelectEmployee;
+        if (!canSelectEmployee) {
+          _selectedEmployeeId = profile.id;
+          _selectedEmployeeName = RequestEmployeeAccess.employeeName(profile);
+        }
+      });
+
+      if (canSelectEmployee) {
+        await _loadEmployees();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppNotice.showError(context, 'Lỗi tải thông tin nhân viên: $e');
+      }
+    } finally {
+      if (mounted && !_canSelectEmployee) {
+        setState(() => _isLoadingEmployees = false);
+      }
+    }
   }
 
   Future<void> _loadEmployees() async {
@@ -73,7 +107,8 @@ class _PurchaseRequestPageState extends State<PurchaseRequestPage> {
         final employees = await _employeeService.listEmployees();
         if (mounted) setState(() => _employees = employees);
       } catch (e) {
-        if (mounted) AppNotice.showError(context, 'Lỗi tải danh sách nhân viên: $e');
+        if (mounted)
+          AppNotice.showError(context, 'Lỗi tải danh sách nhân viên: $e');
       } finally {
         if (mounted) setState(() => _isLoadingEmployees = false);
       }
@@ -88,6 +123,10 @@ class _PurchaseRequestPageState extends State<PurchaseRequestPage> {
   }
 
   Future<void> _pickEmployee() async {
+    if (!_canSelectEmployee) {
+      return;
+    }
+
     if (_isLoadingEmployees || _employees.isEmpty) {
       await _loadEmployees();
       if (!mounted) return;
@@ -183,7 +222,8 @@ class _PurchaseRequestPageState extends State<PurchaseRequestPage> {
 
     final details = _buildDetails();
     if (details.isEmpty) {
-      AppNotice.showError(context, 'Vui lòng nhập ít nhất một mục chi tiết hợp lệ');
+      AppNotice.showError(
+          context, 'Vui lòng nhập ít nhất một mục chi tiết hợp lệ');
       return;
     }
 
@@ -191,7 +231,8 @@ class _PurchaseRequestPageState extends State<PurchaseRequestPage> {
     AppLoading.show(message: 'Đang gửi yêu cầu...');
     try {
       final profile = await _authService.me();
-      final total = details.fold<num>(0, (sum, d) => sum + ((d['Thành tiền'] as num?) ?? 0));
+      final total = details.fold<num>(
+          0, (sum, d) => sum + ((d['Thành tiền'] as num?) ?? 0));
       final message = await _requestsService.createRequest(
         companyId: profile.companyId,
         requestType: 'Mua hàng',
@@ -200,7 +241,8 @@ class _PurchaseRequestPageState extends State<PurchaseRequestPage> {
           'Nhân viên': _selectedEmployeeName,
           'Ngày': _apiDateFromDisplayDate(_formatDate(_selectedDate!)),
           'Loại': _selectedType,
-          if (_noteController.text.trim().isNotEmpty) 'Ghi chú': _noteController.text.trim(),
+          if (_noteController.text.trim().isNotEmpty)
+            'Ghi chú': _noteController.text.trim(),
           'Tổng số tiền': total,
         },
         details: details,
@@ -272,9 +314,11 @@ class _PurchaseRequestPageState extends State<PurchaseRequestPage> {
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Gửi', style: PrimarySectionAppBar.actionTextStyle),
+                  : const Text('Gửi',
+                      style: PrimarySectionAppBar.actionTextStyle),
             ),
           ),
         ],
@@ -291,7 +335,9 @@ class _PurchaseRequestPageState extends State<PurchaseRequestPage> {
             const SizedBox(height: RequestFormStyle.itemGap),
             _SelectorCard(
               icon: Icons.calendar_today_outlined,
-              value: _selectedDate == null ? 'Chọn ngày' : _formatDate(_selectedDate!),
+              value: _selectedDate == null
+                  ? 'Chọn ngày'
+                  : _formatDate(_selectedDate!),
               onTap: _pickDate,
               requiredMark: true,
               isPlaceholder: _selectedDate == null,
@@ -316,11 +362,15 @@ class _PurchaseRequestPageState extends State<PurchaseRequestPage> {
               children: [
                 const Text(
                   'Chi tiết',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary),
                 ),
                 IconButton(
                   onPressed: _addDetail,
-                  icon: const Icon(Icons.add, color: Color(0xFF16C879), size: 34),
+                  icon:
+                      const Icon(Icons.add, color: Color(0xFF16C879), size: 34),
                 ),
               ],
             ),
@@ -342,8 +392,10 @@ class _PurchaseDetailControllers {
   final TextEditingController quantityController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
 
-  num get quantity => num.tryParse(quantityController.text.replaceAll(',', '').trim()) ?? 0;
-  num get price => num.tryParse(priceController.text.replaceAll(',', '').trim()) ?? 0;
+  num get quantity =>
+      num.tryParse(quantityController.text.replaceAll(',', '').trim()) ?? 0;
+  num get price =>
+      num.tryParse(priceController.text.replaceAll(',', '').trim()) ?? 0;
 
   void dispose() {
     nameController.dispose();
@@ -367,13 +419,18 @@ class _PurchaseDetailCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
         border: Border.all(color: const Color(0xFFF0F2F6)),
         boxShadow: const [
-          BoxShadow(color: Color(0x11000000), blurRadius: 10, offset: Offset(0, 4)),
+          BoxShadow(
+              color: Color(0x11000000), blurRadius: 10, offset: Offset(0, 4)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Mục $index', style: const TextStyle(fontSize: 16, color: AppColors.muted, fontWeight: FontWeight.w500)),
+          Text('Mục $index',
+              style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.muted,
+                  fontWeight: FontWeight.w500)),
           const SizedBox(height: RequestFormStyle.compactGap),
           _InputCard(
             icon: Icons.chat_bubble_outline_rounded,
@@ -391,7 +448,9 @@ class _PurchaseDetailCard extends StatelessWidget {
                   controller: controllers.quantityController,
                   requiredMark: true,
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))
+                  ],
                 ),
               ),
               const SizedBox(width: 10),
@@ -440,7 +499,8 @@ class _SelectorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+          constraints:
+              const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
           padding: RequestFormStyle.fieldPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
@@ -448,7 +508,8 @@ class _SelectorCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+              Icon(icon,
+                  size: RequestFormStyle.iconSize, color: AppColors.muted),
               const SizedBox(width: RequestFormStyle.iconTextGap),
               Expanded(
                 child: Text.rich(
@@ -457,21 +518,26 @@ class _SelectorCard extends StatelessWidget {
                       if (requiredMark)
                         const TextSpan(
                           text: '* ',
-                          style: TextStyle(color: RequestFormStyle.requiredColor, fontSize: 16),
+                          style: TextStyle(
+                              color: RequestFormStyle.requiredColor,
+                              fontSize: 16),
                         ),
                       TextSpan(
                         text: value,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: isPlaceholder ? AppColors.muted : AppColors.textPrimary,
+                          color: isPlaceholder
+                              ? AppColors.muted
+                              : AppColors.textPrimary,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.muted, size: RequestFormStyle.iconSize),
+              const Icon(Icons.chevron_right_rounded,
+                  color: AppColors.muted, size: RequestFormStyle.iconSize),
             ],
           ),
         ),
@@ -502,7 +568,10 @@ class _InputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: BoxConstraints(minHeight: maxLines > 1 ? RequestFormStyle.multilineMinHeight : RequestFormStyle.fieldMinHeight),
+      constraints: BoxConstraints(
+          minHeight: maxLines > 1
+              ? RequestFormStyle.multilineMinHeight
+              : RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -510,11 +579,13 @@ class _InputCard extends StatelessWidget {
         border: Border.all(color: AppColors.divider),
       ),
       child: Row(
-        crossAxisAlignment: maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment:
+            maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           Padding(
             padding: EdgeInsets.only(top: maxLines > 1 ? 3 : 0),
-            child: Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+            child: Icon(icon,
+                size: RequestFormStyle.iconSize, color: AppColors.muted),
           ),
           const SizedBox(width: RequestFormStyle.iconTextGap),
           Expanded(
@@ -522,7 +593,9 @@ class _InputCard extends StatelessWidget {
               controller: controller,
               maxLines: maxLines,
               minLines: maxLines > 1 ? maxLines : 1,
-              textAlignVertical: maxLines > 1 ? TextAlignVertical.top : TextAlignVertical.center,
+              textAlignVertical: maxLines > 1
+                  ? TextAlignVertical.top
+                  : TextAlignVertical.center,
               keyboardType: keyboardType,
               inputFormatters: inputFormatters,
               style: const TextStyle(
@@ -566,17 +639,23 @@ class _FileButtonCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.folder_open_rounded, size: RequestFormStyle.iconSize, color: AppColors.muted),
+          const Icon(Icons.folder_open_rounded,
+              size: RequestFormStyle.iconSize, color: AppColors.muted),
           const SizedBox(width: RequestFormStyle.iconTextGap),
           const Expanded(
-            child: Text('Tài liệu', style: TextStyle(fontSize: 16, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
+            child: Text('Tài liệu',
+                style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500)),
           ),
           OutlinedButton(
             onPressed: onTap,
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF16C879),
               side: const BorderSide(color: Color(0xFF16C879)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
             ),
             child: const Text('Thêm'),

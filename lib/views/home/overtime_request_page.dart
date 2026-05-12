@@ -14,6 +14,7 @@ import '../../services/auth_service.dart';
 import '../../services/company_directory_service.dart';
 import '../../services/employee_directory_service.dart';
 import '../../services/requests_service.dart';
+import '../../services/request_employee_access.dart';
 
 class OvertimeRequestPage extends StatefulWidget {
   const OvertimeRequestPage({super.key});
@@ -45,21 +46,52 @@ class OvertimeRequestPageState extends State<OvertimeRequestPage> {
 
   bool _isSubmitting = false;
   bool _isLoadingEmployees = false;
+  bool _canSelectEmployee = false;
   bool _isLoadingBranches = false;
   List<EmployeeListItem> _employees = [];
   List<CompanyDirectoryItem> _branches = [];
 
   List<String> get _overtimeTypes => const [
-    'Ngày thường',
-    'Ngày Chủ nhật',
-    'Ngày lễ',
-  ];
+        'Ngày thường',
+        'Ngày Chủ nhật',
+        'Ngày lễ',
+      ];
 
   @override
   void initState() {
     super.initState();
-    _loadEmployees();
+    _loadCurrentEmployee();
     _loadBranches();
+  }
+
+  Future<void> _loadCurrentEmployee() async {
+    setState(() => _isLoadingEmployees = true);
+    try {
+      final profile = await _authService.me();
+      if (!mounted) return;
+
+      final canSelectEmployee =
+          RequestEmployeeAccess.canSelectEmployee(profile);
+      setState(() {
+        _canSelectEmployee = canSelectEmployee;
+        if (!canSelectEmployee) {
+          _selectedEmployeeId = profile.id;
+          _selectedEmployeeName = RequestEmployeeAccess.employeeName(profile);
+        }
+      });
+
+      if (canSelectEmployee) {
+        await _loadEmployees();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppNotice.showError(context, 'Lỗi tải thông tin nhân viên: $e');
+      }
+    } finally {
+      if (mounted && !_canSelectEmployee) {
+        setState(() => _isLoadingEmployees = false);
+      }
+    }
   }
 
   Future<void> _loadEmployees() async {
@@ -160,10 +192,14 @@ class OvertimeRequestPageState extends State<OvertimeRequestPage> {
         fields: <String, dynamic>{
           'Nhân viên': _selectedEmployeeName,
           'Loại': _selectedOvertimeType,
-          'Giờ bắt đầu': '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}',
-          'Giờ kết thúc': '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
-          if (_quantityController.text.trim().isNotEmpty) 'Số giờ': _quantityController.text.trim(),
-          if (_ratioController.text.trim().isNotEmpty) 'Tỷ lệ': _ratioController.text.trim(),
+          'Giờ bắt đầu':
+              '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}',
+          'Giờ kết thúc':
+              '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
+          if (_quantityController.text.trim().isNotEmpty)
+            'Số giờ': _quantityController.text.trim(),
+          if (_ratioController.text.trim().isNotEmpty)
+            'Tỷ lệ': _ratioController.text.trim(),
           if (_selectedBranchId.isNotEmpty) 'Chi nhánh': _selectedBranchName,
           'Lý do': _reasonController.text.trim(),
         },
@@ -187,6 +223,10 @@ class OvertimeRequestPageState extends State<OvertimeRequestPage> {
   }
 
   Future<void> _pickEmployee() async {
+    if (!_canSelectEmployee) {
+      return;
+    }
+
     if (_isLoadingEmployees || _employees.isEmpty) {
       await _loadEmployees();
       if (!mounted) return;
@@ -334,7 +374,8 @@ class OvertimeRequestPageState extends State<OvertimeRequestPage> {
                             children: [
                               for (var minute = 0; minute < 60; minute++)
                                 Center(
-                                  child: Text(minute.toString().padLeft(2, '0')),
+                                  child:
+                                      Text(minute.toString().padLeft(2, '0')),
                                 ),
                             ],
                           ),
@@ -358,7 +399,8 @@ class OvertimeRequestPageState extends State<OvertimeRequestPage> {
                                 color: Color(0xFF16C879),
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
+                                borderRadius: BorderRadius.circular(
+                                    RequestFormStyle.fieldRadius),
                               ),
                               textStyle: const TextStyle(
                                 fontSize: 16,
@@ -393,7 +435,8 @@ class OvertimeRequestPageState extends State<OvertimeRequestPage> {
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
+                                borderRadius: BorderRadius.circular(
+                                    RequestFormStyle.fieldRadius),
                               ),
                               textStyle: const TextStyle(
                                 fontSize: 16,
@@ -559,7 +602,8 @@ class _SelectorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+          constraints:
+              const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
           padding: RequestFormStyle.fieldPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
@@ -567,7 +611,8 @@ class _SelectorCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+              Icon(icon,
+                  size: RequestFormStyle.iconSize, color: AppColors.muted),
               const SizedBox(width: RequestFormStyle.iconTextGap),
               Expanded(
                 child: Text.rich(
@@ -626,7 +671,10 @@ class _InputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: BoxConstraints(minHeight: maxLines > 1 ? RequestFormStyle.multilineMinHeight : RequestFormStyle.fieldMinHeight),
+      constraints: BoxConstraints(
+          minHeight: maxLines > 1
+              ? RequestFormStyle.multilineMinHeight
+              : RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -639,7 +687,8 @@ class _InputCard extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(top: maxLines > 1 ? 3 : 0),
-            child: Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+            child: Icon(icon,
+                size: RequestFormStyle.iconSize, color: AppColors.muted),
           ),
           const SizedBox(width: RequestFormStyle.iconTextGap),
           Expanded(
@@ -647,8 +696,9 @@ class _InputCard extends StatelessWidget {
               controller: controller,
               maxLines: maxLines,
               minLines: maxLines > 1 ? maxLines : 1,
-              textAlignVertical:
-                  maxLines > 1 ? TextAlignVertical.top : TextAlignVertical.center,
+              textAlignVertical: maxLines > 1
+                  ? TextAlignVertical.top
+                  : TextAlignVertical.center,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,

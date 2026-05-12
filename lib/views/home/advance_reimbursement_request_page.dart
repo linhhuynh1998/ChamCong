@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -8,6 +8,7 @@ import '../../core/widgets/app_loading.dart';
 import '../../core/widgets/primary_section_app_bar.dart';
 import '../../core/widgets/request_form_style.dart';
 import '../../models/employee_list_item.dart';
+import '../../models/employee_profile.dart';
 import '../../models/location_option.dart';
 import '../../services/auth_service.dart';
 import '../../services/employee_directory_service.dart';
@@ -27,7 +28,8 @@ class _AdvanceReimbursementRequestPageState
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _purposeController = TextEditingController();
   final TextEditingController _accountOwnerController = TextEditingController();
-  final TextEditingController _accountNumberController = TextEditingController();
+  final TextEditingController _accountNumberController =
+      TextEditingController();
   final TextEditingController _bankNameController = TextEditingController();
   final AuthService _authService = AuthService();
   final EmployeeDirectoryService _employeeService = EmployeeDirectoryService();
@@ -44,6 +46,7 @@ class _AdvanceReimbursementRequestPageState
   String _selectedAdvanceTypeId = '';
   String _selectedAdvanceType = 'Chọn loại';
   String _selectedPaymentType = 'Chọn loại';
+  EmployeeProfile? _profile;
 
   bool _isSubmitting = false;
   bool _isLoadingEmployees = false;
@@ -62,8 +65,38 @@ class _AdvanceReimbursementRequestPageState
   @override
   void initState() {
     super.initState();
-    _loadEmployees();
+    _loadCurrentEmployee();
     _loadAdvanceTypes();
+  }
+
+  Future<void> _loadCurrentEmployee() async {
+    setState(() => _isLoadingEmployees = true);
+    try {
+      final profile = await _authService.me();
+      if (!mounted) return;
+
+      final canSelectEmployee = _canSelectEmployee(profile);
+      setState(() {
+        _profile = profile;
+        if (!canSelectEmployee) {
+          _selectedEmployeeId = profile.id;
+          _selectedEmployeeName =
+              profile.name.trim().isEmpty ? 'Nhân viên' : profile.name;
+        }
+      });
+
+      if (canSelectEmployee) {
+        await _loadEmployees();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppNotice.showError(context, 'Lỗi tải thông tin nhân viên: $e');
+      }
+    } finally {
+      if (mounted && !_canSelectEmployee(_profile)) {
+        setState(() => _isLoadingEmployees = false);
+      }
+    }
   }
 
   Future<void> _loadEmployees() async {
@@ -248,6 +281,10 @@ class _AdvanceReimbursementRequestPageState
   }
 
   Future<void> _pickEmployee() async {
+    if (!_canSelectEmployee(_profile)) {
+      return;
+    }
+
     if (_isLoadingEmployees || _employees.isEmpty) {
       await _loadEmployees();
       if (!mounted) return;
@@ -269,6 +306,25 @@ class _AdvanceReimbursementRequestPageState
         _selectedEmployeeName = selected.name;
       });
     }
+  }
+
+  bool _canSelectEmployee(EmployeeProfile? profile) {
+    final role = profile?.role.trim().toLowerCase() ?? '';
+    return const <String>{
+      'admin',
+      'administrator',
+      'company',
+      'company_admin',
+      'owner',
+      'manager',
+      'super_admin',
+      'superadmin',
+      'hr',
+      'quan ly',
+      'quan_ly',
+      'quản lý',
+      'quản_lý',
+    }.contains(role);
   }
 
   Future<void> _pickAdvanceType() async {
@@ -442,6 +498,8 @@ class _AdvanceReimbursementRequestPageState
 
   @override
   Widget build(BuildContext context) {
+    final canSelectEmployee = _canSelectEmployee(_profile);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PrimarySectionAppBar(
@@ -461,7 +519,8 @@ class _AdvanceReimbursementRequestPageState
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Gửi', style: PrimarySectionAppBar.actionTextStyle),
+                  : const Text('Gửi',
+                      style: PrimarySectionAppBar.actionTextStyle),
             ),
           ),
         ],
@@ -474,6 +533,7 @@ class _AdvanceReimbursementRequestPageState
               icon: Icons.people_outline_rounded,
               value: _selectedEmployeeName,
               onTap: _pickEmployee,
+              enabled: canSelectEmployee,
             ),
             const SizedBox(height: RequestFormStyle.itemGap),
             _SelectorCard(
@@ -691,23 +751,28 @@ class _SelectorCard extends StatelessWidget {
     required this.value,
     required this.onTap,
     this.requiredMark = false,
+    this.enabled = true,
   });
 
   final IconData icon;
   final String value;
   final VoidCallback onTap;
   final bool requiredMark;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
+    final contentColor = enabled ? AppColors.textPrimary : AppColors.muted;
+
     return Material(
       color: RequestFormStyle.fieldBackground,
       borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
       child: InkWell(
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
-        onTap: onTap,
+        onTap: enabled ? onTap : null,
         child: Container(
-          constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+          constraints:
+              const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
           padding: RequestFormStyle.fieldPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
@@ -715,7 +780,8 @@ class _SelectorCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+              Icon(icon,
+                  size: RequestFormStyle.iconSize, color: AppColors.muted),
               const SizedBox(width: RequestFormStyle.iconTextGap),
               Expanded(
                 child: Text.rich(
@@ -731,21 +797,22 @@ class _SelectorCard extends StatelessWidget {
                         ),
                       TextSpan(
                         text: value,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
+                          color: contentColor,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.muted,
-                size: RequestFormStyle.iconSize,
-              ),
+              if (enabled)
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.muted,
+                  size: RequestFormStyle.iconSize,
+                ),
             ],
           ),
         ),
@@ -776,7 +843,8 @@ class _InputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+      constraints:
+          const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -836,7 +904,8 @@ class _LabeledInputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+      constraints:
+          const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -878,7 +947,8 @@ class _ValueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+      constraints:
+          const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -958,7 +1028,8 @@ class _AttachmentCard extends StatelessWidget {
               foregroundColor: AppColors.primary,
               side: const BorderSide(color: AppColors.primary),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
+                borderRadius:
+                    BorderRadius.circular(RequestFormStyle.fieldRadius),
               ),
               textStyle: const TextStyle(
                 fontSize: 16,

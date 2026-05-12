@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -19,7 +19,8 @@ class SalaryAdvanceRequestPage extends StatefulWidget {
   const SalaryAdvanceRequestPage({super.key});
 
   @override
-  State<SalaryAdvanceRequestPage> createState() => _SalaryAdvanceRequestPageState();
+  State<SalaryAdvanceRequestPage> createState() =>
+      _SalaryAdvanceRequestPageState();
 }
 
 class _SalaryAdvanceRequestPageState extends State<SalaryAdvanceRequestPage> {
@@ -39,7 +40,7 @@ class _SalaryAdvanceRequestPageState extends State<SalaryAdvanceRequestPage> {
   String _selectedTypeId = '';
   String _selectedType = 'Chọn loại';
   EmployeeProfile? _profile;
-  
+
   bool _isSubmitting = false;
   bool _isLoadingEmployees = false;
   bool _isLoadingRequestTypes = false;
@@ -62,9 +63,8 @@ class _SalaryAdvanceRequestPageState extends State<SalaryAdvanceRequestPage> {
       setState(() {
         _profile = profile;
         _selectedEmployeeId = profile.id;
-        _selectedEmployeeName = profile.name.trim().isEmpty
-            ? 'Nhân viên'
-            : profile.name;
+        _selectedEmployeeName =
+            profile.name.trim().isEmpty ? 'Nhân viên' : profile.name;
       });
 
       if (_canSelectEmployee(profile)) {
@@ -236,6 +236,7 @@ class _SalaryAdvanceRequestPageState extends State<SalaryAdvanceRequestPage> {
       'admin',
       'administrator',
       'company',
+      'company_admin',
       'owner',
       'manager',
       'super_admin',
@@ -509,7 +510,8 @@ class _SalaryAdvanceRequestPageState extends State<SalaryAdvanceRequestPage> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Gửi', style: PrimarySectionAppBar.actionTextStyle),
+                  : const Text('Gửi',
+                      style: PrimarySectionAppBar.actionTextStyle),
             ),
           ),
         ],
@@ -526,7 +528,7 @@ class _SalaryAdvanceRequestPageState extends State<SalaryAdvanceRequestPage> {
               enabled: canSelectEmployee,
             ),
             const SizedBox(height: RequestFormStyle.itemGap),
-            
+
             // Date (Required)
             _SelectorCard(
               icon: Icons.calendar_month_outlined,
@@ -535,7 +537,7 @@ class _SalaryAdvanceRequestPageState extends State<SalaryAdvanceRequestPage> {
               requiredMark: true,
             ),
             const SizedBox(height: RequestFormStyle.itemGap),
-            
+
             // Title (Required)
             _InputCard(
               icon: Icons.chat_bubble_outline_rounded,
@@ -544,7 +546,7 @@ class _SalaryAdvanceRequestPageState extends State<SalaryAdvanceRequestPage> {
               requiredMark: true,
             ),
             const SizedBox(height: RequestFormStyle.itemGap),
-            
+
             // Type Selector (Required)
             _SelectorCard(
               icon: Icons.grid_view_rounded,
@@ -553,7 +555,7 @@ class _SalaryAdvanceRequestPageState extends State<SalaryAdvanceRequestPage> {
               requiredMark: true,
             ),
             const SizedBox(height: RequestFormStyle.itemGap),
-            
+
             // Amount (Required)
             _InputCard(
               icon: Icons.payments_outlined,
@@ -564,7 +566,7 @@ class _SalaryAdvanceRequestPageState extends State<SalaryAdvanceRequestPage> {
               requiredMark: true,
             ),
             const SizedBox(height: RequestFormStyle.itemGap),
-            
+
             // Reason (Required)
             _InputCard(
               icon: Icons.chat_bubble_outline_rounded,
@@ -604,7 +606,8 @@ class _SelectorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
         onTap: enabled ? onTap : null,
         child: Container(
-          constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+          constraints:
+              const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
           padding: RequestFormStyle.fieldPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
@@ -612,7 +615,8 @@ class _SelectorCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+              Icon(icon,
+                  size: RequestFormStyle.iconSize, color: AppColors.muted),
               const SizedBox(width: RequestFormStyle.iconTextGap),
               Expanded(
                 child: Text.rich(
@@ -676,7 +680,10 @@ class _InputCard extends StatelessWidget {
     final isMultiline = maxLines > 1;
 
     return Container(
-      constraints: BoxConstraints(minHeight: isMultiline ? RequestFormStyle.multilineMinHeight : RequestFormStyle.fieldMinHeight),
+      constraints: BoxConstraints(
+          minHeight: isMultiline
+              ? RequestFormStyle.multilineMinHeight
+              : RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -689,7 +696,8 @@ class _InputCard extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(top: isMultiline ? 3 : 0),
-            child: Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+            child: Icon(icon,
+                size: RequestFormStyle.iconSize, color: AppColors.muted),
           ),
           const SizedBox(width: RequestFormStyle.iconTextGap),
           Expanded(
@@ -699,8 +707,9 @@ class _InputCard extends StatelessWidget {
               inputFormatters: inputFormatters,
               maxLines: maxLines,
               minLines: maxLines > 1 ? maxLines : 1,
-              textAlignVertical:
-                  isMultiline ? TextAlignVertical.top : TextAlignVertical.center,
+              textAlignVertical: isMultiline
+                  ? TextAlignVertical.top
+                  : TextAlignVertical.center,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,

@@ -11,6 +11,7 @@ import '../../models/employee_list_item.dart';
 import '../../services/auth_service.dart';
 import '../../services/employee_directory_service.dart';
 import '../../services/requests_service.dart';
+import '../../services/request_employee_access.dart';
 
 class LeaveRequestPage extends StatefulWidget {
   const LeaveRequestPage({super.key});
@@ -40,6 +41,7 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
 
   bool _isSubmitting = false;
   bool _isLoadingEmployees = false;
+  bool _canSelectEmployee = false;
   List<EmployeeListItem> _employees = [];
 
   final List<String> _leaveTypes = [
@@ -54,7 +56,37 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
   @override
   void initState() {
     super.initState();
-    _loadEmployees();
+    _loadCurrentEmployee();
+  }
+
+  Future<void> _loadCurrentEmployee() async {
+    setState(() => _isLoadingEmployees = true);
+    try {
+      final profile = await _authService.me();
+      if (!mounted) return;
+
+      final canSelectEmployee =
+          RequestEmployeeAccess.canSelectEmployee(profile);
+      setState(() {
+        _canSelectEmployee = canSelectEmployee;
+        if (!canSelectEmployee) {
+          _selectedEmployeeId = profile.id;
+          _selectedEmployeeName = RequestEmployeeAccess.employeeName(profile);
+        }
+      });
+
+      if (canSelectEmployee) {
+        await _loadEmployees();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppNotice.showError(context, 'Lỗi tải thông tin nhân viên: $e');
+      }
+    } finally {
+      if (mounted && !_canSelectEmployee) {
+        setState(() => _isLoadingEmployees = false);
+      }
+    }
   }
 
   Future<void> _loadEmployees() async {
@@ -99,7 +131,7 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
       AppNotice.showError(context, 'Vui lòng chọn loại nghỉ phép');
       return;
     }
-    
+
     // Validate based on leave type
     if (_isPartialDayLeave()) {
       if (_startTime == null) {
@@ -124,11 +156,12 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
         return;
       }
       if (!_toDate!.isAfter(_fromDate!) && !_sameDay(_toDate!, _fromDate!)) {
-        AppNotice.showError(context, 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu');
+        AppNotice.showError(
+            context, 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu');
         return;
       }
     }
-    
+
     if (_reasonController.text.trim().isEmpty) {
       AppNotice.showError(context, 'Vui lòng nhập lý do');
       return;
@@ -142,18 +175,22 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
         'Nhân viên': _selectedEmployeeName,
         'Loại nghỉ phép': _selectedLeaveType,
         if (_isPartialDayLeave()) ...{
-          'Giờ bắt đầu': '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}',
-          'Giờ kết thúc': '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
+          'Giờ bắt đầu':
+              '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}',
+          'Giờ kết thúc':
+              '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
         },
         if (_isMultipleDaysLeave()) ...{
           'Từ ngày': _formatDate(_fromDate!),
           'Đến ngày': _formatDate(_toDate!),
         },
-        if (_contentController.text.trim().isNotEmpty) 'Nội dung': _contentController.text.trim(),
-        if (_selectedHandoverPersonId.isNotEmpty) 'Người bàn giao': _selectedHandoverPersonName,
+        if (_contentController.text.trim().isNotEmpty)
+          'Nội dung': _contentController.text.trim(),
+        if (_selectedHandoverPersonId.isNotEmpty)
+          'Người bàn giao': _selectedHandoverPersonName,
         'Lý do': _reasonController.text.trim(),
       };
-      
+
       final message = await _requestsService.createRequest(
         companyId: profile.companyId,
         requestType: 'Nghỉ phép',
@@ -179,6 +216,10 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
   }
 
   Future<void> _pickEmployee() async {
+    if (!_canSelectEmployee) {
+      return;
+    }
+
     if (_isLoadingEmployees || _employees.isEmpty) {
       await _loadEmployees();
       if (!mounted) return;
@@ -250,9 +291,9 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
 
   bool _isPartialDayLeave() {
     return _selectedLeaveType == '1/4 ngày' ||
-      _selectedLeaveType == '1/2 ngày' ||
-      _selectedLeaveType == '3/4 ngày' ||
-      _selectedLeaveType == 'Theo giờ';
+        _selectedLeaveType == '1/2 ngày' ||
+        _selectedLeaveType == '3/4 ngày' ||
+        _selectedLeaveType == 'Theo giờ';
   }
 
   bool _isFullDayLeave() {
@@ -348,7 +389,8 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
                             children: [
                               for (var minute = 0; minute < 60; minute++)
                                 Center(
-                                  child: Text(minute.toString().padLeft(2, '0')),
+                                  child:
+                                      Text(minute.toString().padLeft(2, '0')),
                                 ),
                             ],
                           ),
@@ -372,7 +414,8 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
                                 color: Color(0xFF16C879),
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
+                                borderRadius: BorderRadius.circular(
+                                    RequestFormStyle.fieldRadius),
                               ),
                               textStyle: const TextStyle(
                                 fontSize: 16,
@@ -407,7 +450,8 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
+                                borderRadius: BorderRadius.circular(
+                                    RequestFormStyle.fieldRadius),
                               ),
                               textStyle: const TextStyle(
                                 fontSize: 16,
@@ -450,12 +494,14 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
       initialDateTime.month,
       initialDateTime.day,
     );
-    final initialDateIndex = dates.indexWhere((item) => _sameDay(item, initialDate));
+    final initialDateIndex =
+        dates.indexWhere((item) => _sameDay(item, initialDate));
 
     final dateController = FixedExtentScrollController(
       initialItem: initialDateIndex >= 0 ? initialDateIndex : 90,
     );
-    var selectedDate = initialDateIndex >= 0 ? dates[initialDateIndex] : initialDate;
+    var selectedDate =
+        initialDateIndex >= 0 ? dates[initialDateIndex] : initialDate;
 
     return showDialog<DateTime>(
       context: context,
@@ -522,7 +568,8 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
                                 color: Color(0xFF16C879),
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
+                                borderRadius: BorderRadius.circular(
+                                    RequestFormStyle.fieldRadius),
                               ),
                               textStyle: const TextStyle(
                                 fontSize: 16,
@@ -549,7 +596,8 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
+                                borderRadius: BorderRadius.circular(
+                                    RequestFormStyle.fieldRadius),
                               ),
                               textStyle: const TextStyle(
                                 fontSize: 16,
@@ -718,7 +766,8 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Gửi', style: PrimarySectionAppBar.actionTextStyle),
+                  : const Text('Gửi',
+                      style: PrimarySectionAppBar.actionTextStyle),
             ),
           ),
         ],
@@ -746,7 +795,9 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
                 const SizedBox(height: RequestFormStyle.itemGap),
                 _SelectorCard(
                   icon: Icons.access_time_outlined,
-                  value: _startTime == null ? 'Giờ bắt đầu' : '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}',
+                  value: _startTime == null
+                      ? 'Giờ bắt đầu'
+                      : '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}',
                   onTap: _pickStartTime,
                   requiredMark: true,
                   isPlaceholder: _startTime == null,
@@ -754,7 +805,9 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
                 const SizedBox(height: RequestFormStyle.itemGap),
                 _SelectorCard(
                   icon: Icons.access_time_outlined,
-                  value: _endTime == null ? 'Giờ kết thúc' : '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
+                  value: _endTime == null
+                      ? 'Giờ kết thúc'
+                      : '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}',
                   onTap: _pickEndTime,
                   requiredMark: true,
                   isPlaceholder: _endTime == null,
@@ -765,7 +818,8 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
                 const SizedBox(height: RequestFormStyle.itemGap),
                 _SelectorCard(
                   icon: Icons.calendar_today_outlined,
-                  value: _fromDate == null ? 'Từ ngày' : _formatDate(_fromDate!),
+                  value:
+                      _fromDate == null ? 'Từ ngày' : _formatDate(_fromDate!),
                   onTap: _pickFromDate,
                   requiredMark: true,
                   isPlaceholder: _fromDate == null,
@@ -785,7 +839,8 @@ class _LeaveRequestPageState extends State<LeaveRequestPage> {
               icon: Icons.person_outline_rounded,
               value: _selectedHandoverPersonName,
               onTap: _pickHandoverPerson,
-              isPlaceholder: _selectedHandoverPersonName == 'Chọn người bàn giao',
+              isPlaceholder:
+                  _selectedHandoverPersonName == 'Chọn người bàn giao',
             ),
             const SizedBox(height: RequestFormStyle.itemGap),
             _InputCard(
@@ -833,7 +888,8 @@ class _SelectorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+          constraints:
+              const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
           padding: RequestFormStyle.fieldPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
@@ -841,7 +897,8 @@ class _SelectorCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+              Icon(icon,
+                  size: RequestFormStyle.iconSize, color: AppColors.muted),
               const SizedBox(width: RequestFormStyle.iconTextGap),
               Expanded(
                 child: Text.rich(
@@ -900,7 +957,10 @@ class _InputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: BoxConstraints(minHeight: maxLines > 1 ? RequestFormStyle.multilineMinHeight : RequestFormStyle.fieldMinHeight),
+      constraints: BoxConstraints(
+          minHeight: maxLines > 1
+              ? RequestFormStyle.multilineMinHeight
+              : RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -913,7 +973,8 @@ class _InputCard extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(top: maxLines > 1 ? 3 : 0),
-            child: Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+            child: Icon(icon,
+                size: RequestFormStyle.iconSize, color: AppColors.muted),
           ),
           const SizedBox(width: RequestFormStyle.iconTextGap),
           Expanded(
@@ -921,8 +982,9 @@ class _InputCard extends StatelessWidget {
               controller: controller,
               maxLines: maxLines,
               minLines: maxLines > 1 ? maxLines : 1,
-              textAlignVertical:
-                  maxLines > 1 ? TextAlignVertical.top : TextAlignVertical.center,
+              textAlignVertical: maxLines > 1
+                  ? TextAlignVertical.top
+                  : TextAlignVertical.center,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,

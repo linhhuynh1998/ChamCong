@@ -1,9 +1,8 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
 
 import '../../controllers/attendance_home_controller.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/widgets/biometric_icon.dart';
 import '../../core/widgets/app_loading.dart';
 import '../../core/widgets/app_notice.dart';
 import '../../core/widgets/work_bottom_bar.dart';
@@ -215,7 +214,7 @@ class _AttendanceHomePageState extends State<AttendanceHomePage> {
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 14,
                     crossAxisSpacing: 14,
-                    childAspectRatio: 1.2,
+                    childAspectRatio: 1.0,
                     children: [
                       _DashboardTile(
                         title: 'Yêu Cầu',
@@ -583,9 +582,9 @@ class _CheckInHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final biometricIcon = Platform.isIOS
-        ? Icons.face_retouching_natural
-        : Icons.fingerprint_rounded;
+    final biometricIconType = Theme.of(context).platform == TargetPlatform.iOS
+        ? BiometricIconType.faceId
+        : BiometricIconType.fingerprint;
 
     return Material(
       color: Colors.transparent,
@@ -644,10 +643,11 @@ class _CheckInHeroCard extends StatelessWidget {
                             color: Color(0xFF2C2C2C),
                           ),
                         )
-                      : Icon(
-                          biometricIcon,
-                          size: 35,
+                      : BiometricIcon(
+                          type: biometricIconType,
+                          size: 42,
                           color: const Color(0xFF2C2C2C),
+                          strokeWidth: 3.2,
                         ),
                 ),
               ),
@@ -754,8 +754,9 @@ class _DashboardTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
@@ -782,7 +783,7 @@ class _DashboardTile extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 17,
                   height: 1.15,
                   fontWeight: FontWeight.w400,
                   color: Colors.black,

@@ -8,8 +8,8 @@ class SessionService {
   static const String _profileCacheAtKey = 'employee_profile_cache_at';
   static final Future<SharedPreferences> _prefsFuture =
       SharedPreferences.getInstance();
-  String? _cachedToken;
-  bool _hasLoadedToken = false;
+  static String? _cachedToken;
+  static bool _hasLoadedToken = false;
 
   Future<void> saveToken(String token) async {
     _cachedToken = token;
@@ -59,7 +59,8 @@ class SessionService {
       }
     }
 
-    final cachedAt = rawCachedAt == null ? null : DateTime.tryParse(rawCachedAt);
+    final cachedAt =
+        rawCachedAt == null ? null : DateTime.tryParse(rawCachedAt);
     return (profileJson: profileJson, cachedAt: cachedAt);
   }
 

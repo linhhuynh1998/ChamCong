@@ -1,10 +1,10 @@
 {
-  "v": 12,
+  "v": 11,
   "id": "cmny2ydo0208req1ltcbia3qn",
   "name": "ChamCong API",
   "folders": [
     {
-      "v": 12,
+      "v": 11,
       "id": "cmny2yk1g208ueq1l527xs7c6",
       "name": "Login",
       "folders": [],
@@ -81,12 +81,10 @@
       },
       "headers": [],
       "variables": [],
-      "description": null,
-      "preRequestScript": "",
-      "testScript": ""
+      "description": null
     },
     {
-      "v": 12,
+      "v": 11,
       "id": "cmny4l06y35h7gb1lnawq0jja",
       "name": "CheckIn or CheckOut",
       "folders": [],
@@ -164,12 +162,10 @@
       },
       "headers": [],
       "variables": [],
-      "description": null,
-      "preRequestScript": "",
-      "testScript": ""
+      "description": null
     },
     {
-      "v": 12,
+      "v": 11,
       "id": "cmnzkaune4uacgb1lvz5bvoir",
       "name": "Region",
       "folders": [],
@@ -269,12 +265,10 @@
       },
       "headers": [],
       "variables": [],
-      "description": null,
-      "preRequestScript": "",
-      "testScript": ""
+      "description": null
     },
     {
-      "v": 12,
+      "v": 11,
       "id": "cmnznt12d4uy4gb1lih3unryu",
       "name": "Branches",
       "folders": [],
@@ -378,12 +372,10 @@
       },
       "headers": [],
       "variables": [],
-      "description": null,
-      "preRequestScript": "",
-      "testScript": ""
+      "description": null
     },
     {
-      "v": 12,
+      "v": 11,
       "id": "cmnzo8nak4v0ogb1lhmtlxs0b",
       "name": "Departments",
       "folders": [],
@@ -487,12 +479,10 @@
       },
       "headers": [],
       "variables": [],
-      "description": null,
-      "preRequestScript": "",
-      "testScript": ""
+      "description": null
     },
     {
-      "v": 12,
+      "v": 11,
       "id": "cmnzodg084v1cgb1lnog10579",
       "name": "Job Titles",
       "folders": [],
@@ -596,12 +586,10 @@
       },
       "headers": [],
       "variables": [],
-      "description": null,
-      "preRequestScript": "",
-      "testScript": ""
+      "description": null
     },
     {
-      "v": 12,
+      "v": 11,
       "id": "cmo28cq4w14b9gb1lez7v5jhm",
       "name": "Location",
       "folders": [],
@@ -790,12 +778,10 @@
       },
       "headers": [],
       "variables": [],
-      "description": null,
-      "preRequestScript": "",
-      "testScript": ""
+      "description": null
     },
     {
-      "v": 12,
+      "v": 11,
       "id": "cmo6zsvyj6uvgeq1ljreti0ft",
       "name": "Employee",
       "folders": [],
@@ -917,12 +903,10 @@
       },
       "headers": [],
       "variables": [],
-      "description": null,
-      "preRequestScript": "",
-      "testScript": ""
+      "description": null
     },
     {
-      "v": 12,
+      "v": 11,
       "id": "cmo7yd1ti1qvpgb1m0p3p7da4",
       "name": "Permission Group",
       "folders": [],
@@ -956,12 +940,10 @@
       },
       "headers": [],
       "variables": [],
-      "description": null,
-      "preRequestScript": "",
-      "testScript": ""
+      "description": null
     },
     {
-      "v": 12,
+      "v": 11,
       "id": "cmo7z0gww1qyigb1mrei2hs9a",
       "name": "Shifts",
       "folders": [],
@@ -1082,12 +1064,10 @@
       },
       "headers": [],
       "variables": [],
-      "description": null,
-      "preRequestScript": "",
-      "testScript": ""
+      "description": null
     },
     {
-      "v": 12,
+      "v": 11,
       "id": "cmos3rq6z1kydh01l2rv8wbhc",
       "name": "Requests",
       "folders": [],
@@ -1096,7 +1076,7 @@
           "v": "17",
           "name": "Request",
           "method": "GET",
-          "endpoint": "<<base_url>>/requests",
+          "endpoint": "<<base_url>>/requests/",
           "params": [],
           "headers": [],
           "preRequestScript": "",
@@ -1427,6 +1407,28 @@
           "requestVariables": [],
           "responses": {},
           "description": null
+        },
+        {
+          "v": "17",
+          "name": "Request - Summary",
+          "method": "GET",
+          "endpoint": "<<base_url>>/requests/summary",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
         }
       ],
       "auth": {
@@ -1435,9 +1437,88 @@
       },
       "headers": [],
       "variables": [],
-      "description": null,
-      "preRequestScript": "",
-      "testScript": ""
+      "description": null
+    },
+    {
+      "v": 11,
+      "id": "cmouxnuly37axir1lb7dolleh",
+      "name": "Notifications",
+      "folders": [],
+      "requests": [
+        {
+          "v": "17",
+          "name": "Notifications",
+          "method": "GET",
+          "endpoint": "<<base_url>>/notifications/",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Notifications - Read",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/notifications/<<id>>/read",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        },
+        {
+          "v": "17",
+          "name": "Notifications - Read All",
+          "method": "PATCH",
+          "endpoint": "<<base_url>>/notifications/read-all",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "bearer",
+            "token": "<<token_auth>>",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {},
+          "description": null
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "description": null
     }
   ],
   "requests": [],
@@ -1447,7 +1528,5 @@
   },
   "headers": [],
   "variables": [],
-  "description": null,
-  "preRequestScript": "",
-  "testScript": ""
+  "description": null
 }

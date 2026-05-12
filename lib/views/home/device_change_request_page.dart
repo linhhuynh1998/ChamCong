@@ -10,6 +10,7 @@ import '../../models/employee_list_item.dart';
 import '../../services/auth_service.dart';
 import '../../services/employee_directory_service.dart';
 import '../../services/requests_service.dart';
+import '../../services/request_employee_access.dart';
 
 class DeviceChangeRequestPage extends StatefulWidget {
   const DeviceChangeRequestPage({super.key});
@@ -32,12 +33,43 @@ class _DeviceChangeRequestPageState extends State<DeviceChangeRequestPage> {
 
   bool _isSubmitting = false;
   bool _isLoadingEmployees = false;
+  bool _canSelectEmployee = false;
   List<EmployeeListItem> _employees = [];
 
   @override
   void initState() {
     super.initState();
-    _loadEmployees();
+    _loadCurrentEmployee();
+  }
+
+  Future<void> _loadCurrentEmployee() async {
+    setState(() => _isLoadingEmployees = true);
+    try {
+      final profile = await _authService.me();
+      if (!mounted) return;
+
+      final canSelectEmployee =
+          RequestEmployeeAccess.canSelectEmployee(profile);
+      setState(() {
+        _canSelectEmployee = canSelectEmployee;
+        if (!canSelectEmployee) {
+          _selectedEmployeeId = profile.id;
+          _selectedEmployeeName = RequestEmployeeAccess.employeeName(profile);
+        }
+      });
+
+      if (canSelectEmployee) {
+        await _loadEmployees();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppNotice.showError(context, 'Lỗi tải thông tin nhân viên: $e');
+      }
+    } finally {
+      if (mounted && !_canSelectEmployee) {
+        setState(() => _isLoadingEmployees = false);
+      }
+    }
   }
 
   Future<void> _loadEmployees() async {
@@ -114,6 +146,10 @@ class _DeviceChangeRequestPageState extends State<DeviceChangeRequestPage> {
   }
 
   Future<void> _pickEmployee() async {
+    if (!_canSelectEmployee) {
+      return;
+    }
+
     if (_isLoadingEmployees || _employees.isEmpty) {
       await _loadEmployees();
       if (!mounted) return;

@@ -13,6 +13,7 @@ import '../../services/auth_service.dart';
 import '../../services/employee_directory_service.dart';
 import '../../services/request_type_service.dart';
 import '../../services/requests_service.dart';
+import '../../services/request_employee_access.dart';
 
 class RewardRequestPage extends StatefulWidget {
   const RewardRequestPage({super.key});
@@ -41,6 +42,7 @@ class _RewardRequestPageState extends State<RewardRequestPage> {
 
   bool _isSubmitting = false;
   bool _isLoadingEmployees = false;
+  bool _canSelectEmployee = false;
   bool _isLoadingRewardTypes = false;
   List<EmployeeListItem> _employees = [];
   List<LocationOption> _rewardTypes = [];
@@ -48,8 +50,38 @@ class _RewardRequestPageState extends State<RewardRequestPage> {
   @override
   void initState() {
     super.initState();
-    _loadEmployees();
+    _loadCurrentEmployee();
     _loadRewardTypes();
+  }
+
+  Future<void> _loadCurrentEmployee() async {
+    setState(() => _isLoadingEmployees = true);
+    try {
+      final profile = await _authService.me();
+      if (!mounted) return;
+
+      final canSelectEmployee =
+          RequestEmployeeAccess.canSelectEmployee(profile);
+      setState(() {
+        _canSelectEmployee = canSelectEmployee;
+        if (!canSelectEmployee) {
+          _selectedEmployeeId = profile.id;
+          _selectedEmployeeName = RequestEmployeeAccess.employeeName(profile);
+        }
+      });
+
+      if (canSelectEmployee) {
+        await _loadEmployees();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppNotice.showError(context, 'Lỗi tải thông tin nhân viên: $e');
+      }
+    } finally {
+      if (mounted && !_canSelectEmployee) {
+        setState(() => _isLoadingEmployees = false);
+      }
+    }
   }
 
   Future<void> _loadEmployees() async {
@@ -89,7 +121,7 @@ class _RewardRequestPageState extends State<RewardRequestPage> {
         if (mounted) setState(() => _rewardTypes = rewardTypes);
       } catch (e) {
         if (mounted) {
-            AppNotice.showError(
+          AppNotice.showError(
               context, 'Lỗi tải danh sách loại khen thưởng: $e');
         }
       } finally {
@@ -171,6 +203,10 @@ class _RewardRequestPageState extends State<RewardRequestPage> {
   }
 
   Future<void> _pickEmployee() async {
+    if (!_canSelectEmployee) {
+      return;
+    }
+
     if (_isLoadingEmployees || _employees.isEmpty) {
       await _loadEmployees();
       if (!mounted) return;
@@ -362,7 +398,8 @@ class _RewardRequestPageState extends State<RewardRequestPage> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('G?i', style: PrimarySectionAppBar.actionTextStyle),
+                  : const Text('G?i',
+                      style: PrimarySectionAppBar.actionTextStyle),
             ),
           ),
         ],
@@ -443,7 +480,8 @@ class _SelectorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+          constraints:
+              const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
           padding: RequestFormStyle.fieldPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
@@ -451,7 +489,8 @@ class _SelectorCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+              Icon(icon,
+                  size: RequestFormStyle.iconSize, color: AppColors.muted),
               const SizedBox(width: RequestFormStyle.iconTextGap),
               Expanded(
                 child: Text.rich(
@@ -514,7 +553,10 @@ class _InputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: BoxConstraints(minHeight: maxLines > 1 ? RequestFormStyle.multilineMinHeight : RequestFormStyle.fieldMinHeight),
+      constraints: BoxConstraints(
+          minHeight: maxLines > 1
+              ? RequestFormStyle.multilineMinHeight
+              : RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -527,7 +569,8 @@ class _InputCard extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(top: maxLines > 1 ? 3 : 0),
-            child: Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+            child: Icon(icon,
+                size: RequestFormStyle.iconSize, color: AppColors.muted),
           ),
           const SizedBox(width: RequestFormStyle.iconTextGap),
           Expanded(

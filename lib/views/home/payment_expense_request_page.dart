@@ -13,12 +13,14 @@ import '../../models/employee_list_item.dart';
 import '../../services/auth_service.dart';
 import '../../services/employee_directory_service.dart';
 import '../../services/requests_service.dart';
+import '../../services/request_employee_access.dart';
 
 class PaymentExpenseRequestPage extends StatefulWidget {
   const PaymentExpenseRequestPage({super.key});
 
   @override
-  State<PaymentExpenseRequestPage> createState() => _PaymentExpenseRequestPageState();
+  State<PaymentExpenseRequestPage> createState() =>
+      _PaymentExpenseRequestPageState();
 }
 
 class _PaymentExpenseRequestPageState extends State<PaymentExpenseRequestPage> {
@@ -33,13 +35,16 @@ class _PaymentExpenseRequestPageState extends State<PaymentExpenseRequestPage> {
 
   bool _isSubmitting = false;
   bool _isLoadingEmployees = false;
+  bool _canSelectEmployee = false;
   List<EmployeeListItem> _employees = [];
-  final List<_ExpenseDetailControllers> _details = [_ExpenseDetailControllers()];
+  final List<_ExpenseDetailControllers> _details = [
+    _ExpenseDetailControllers()
+  ];
 
   @override
   void initState() {
     super.initState();
-    _loadEmployees();
+    _loadCurrentEmployee();
   }
 
   @override
@@ -48,6 +53,36 @@ class _PaymentExpenseRequestPageState extends State<PaymentExpenseRequestPage> {
       d.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _loadCurrentEmployee() async {
+    setState(() => _isLoadingEmployees = true);
+    try {
+      final profile = await _authService.me();
+      if (!mounted) return;
+
+      final canSelectEmployee =
+          RequestEmployeeAccess.canSelectEmployee(profile);
+      setState(() {
+        _canSelectEmployee = canSelectEmployee;
+        if (!canSelectEmployee) {
+          _selectedEmployeeId = profile.id;
+          _selectedEmployeeName = RequestEmployeeAccess.employeeName(profile);
+        }
+      });
+
+      if (canSelectEmployee) {
+        await _loadEmployees();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppNotice.showError(context, 'Lỗi tải thông tin nhân viên: $e');
+      }
+    } finally {
+      if (mounted && !_canSelectEmployee) {
+        setState(() => _isLoadingEmployees = false);
+      }
+    }
   }
 
   Future<void> _loadEmployees() async {
@@ -60,7 +95,8 @@ class _PaymentExpenseRequestPageState extends State<PaymentExpenseRequestPage> {
         final employees = await _employeeService.listEmployees();
         if (mounted) setState(() => _employees = employees);
       } catch (e) {
-        if (mounted) AppNotice.showError(context, 'Lỗi tải danh sách nhân viên: $e');
+        if (mounted)
+          AppNotice.showError(context, 'Lỗi tải danh sách nhân viên: $e');
       } finally {
         if (mounted) setState(() => _isLoadingEmployees = false);
       }
@@ -75,6 +111,10 @@ class _PaymentExpenseRequestPageState extends State<PaymentExpenseRequestPage> {
   }
 
   Future<void> _pickEmployee() async {
+    if (!_canSelectEmployee) {
+      return;
+    }
+
     if (_isLoadingEmployees || _employees.isEmpty) {
       await _loadEmployees();
       if (!mounted) return;
@@ -137,7 +177,8 @@ class _PaymentExpenseRequestPageState extends State<PaymentExpenseRequestPage> {
 
     final details = _buildDetails();
     if (details.isEmpty) {
-      AppNotice.showError(context, 'Vui lòng nhập ít nhất một mục chi tiết hợp lệ');
+      AppNotice.showError(
+          context, 'Vui lòng nhập ít nhất một mục chi tiết hợp lệ');
       return;
     }
 
@@ -145,7 +186,8 @@ class _PaymentExpenseRequestPageState extends State<PaymentExpenseRequestPage> {
     AppLoading.show(message: 'Đang gửi yêu cầu...');
     try {
       final profile = await _authService.me();
-      final total = details.fold<num>(0, (sum, d) => sum + ((d['Số tiền'] as num?) ?? 0));
+      final total =
+          details.fold<num>(0, (sum, d) => sum + ((d['Số tiền'] as num?) ?? 0));
       final message = await _requestsService.createRequest(
         companyId: profile.companyId,
         requestType: 'Thanh toán chi phí',
@@ -208,9 +250,11 @@ class _PaymentExpenseRequestPageState extends State<PaymentExpenseRequestPage> {
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Gửi', style: PrimarySectionAppBar.actionTextStyle),
+                  : const Text('Gửi',
+                      style: PrimarySectionAppBar.actionTextStyle),
             ),
           ),
         ],
@@ -230,11 +274,15 @@ class _PaymentExpenseRequestPageState extends State<PaymentExpenseRequestPage> {
               children: [
                 const Text(
                   'Chi tiết',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary),
                 ),
                 IconButton(
                   onPressed: _addDetail,
-                  icon: const Icon(Icons.add, color: Color(0xFF16C879), size: 34),
+                  icon:
+                      const Icon(Icons.add, color: Color(0xFF16C879), size: 34),
                 ),
               ],
             ),
@@ -256,7 +304,8 @@ class _ExpenseDetailControllers {
   final TextEditingController amountController = TextEditingController();
   final TextEditingController contentController = TextEditingController();
 
-  num get amount => num.tryParse(amountController.text.replaceAll(',', '').trim()) ?? 0;
+  num get amount =>
+      num.tryParse(amountController.text.replaceAll(',', '').trim()) ?? 0;
 
   void dispose() {
     typeController.dispose();
@@ -280,13 +329,18 @@ class _ExpenseDetailCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
         border: Border.all(color: const Color(0xFFF0F2F6)),
         boxShadow: const [
-          BoxShadow(color: Color(0x11000000), blurRadius: 10, offset: Offset(0, 4)),
+          BoxShadow(
+              color: Color(0x11000000), blurRadius: 10, offset: Offset(0, 4)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Mục $index', style: const TextStyle(fontSize: 16, color: AppColors.muted, fontWeight: FontWeight.w500)),
+          Text('Mục $index',
+              style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.muted,
+                  fontWeight: FontWeight.w500)),
           const SizedBox(height: RequestFormStyle.compactGap),
           Row(
             children: [
@@ -351,7 +405,8 @@ class _SelectorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+          constraints:
+              const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
           padding: RequestFormStyle.fieldPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
@@ -359,7 +414,8 @@ class _SelectorCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+              Icon(icon,
+                  size: RequestFormStyle.iconSize, color: AppColors.muted),
               const SizedBox(width: RequestFormStyle.iconTextGap),
               Expanded(
                 child: Text.rich(
@@ -368,21 +424,26 @@ class _SelectorCard extends StatelessWidget {
                       if (requiredMark)
                         const TextSpan(
                           text: '* ',
-                          style: TextStyle(color: RequestFormStyle.requiredColor, fontSize: 16),
+                          style: TextStyle(
+                              color: RequestFormStyle.requiredColor,
+                              fontSize: 16),
                         ),
                       TextSpan(
                         text: value,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: isPlaceholder ? AppColors.muted : AppColors.textPrimary,
+                          color: isPlaceholder
+                              ? AppColors.muted
+                              : AppColors.textPrimary,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.muted, size: RequestFormStyle.iconSize),
+              const Icon(Icons.chevron_right_rounded,
+                  color: AppColors.muted, size: RequestFormStyle.iconSize),
             ],
           ),
         ),
@@ -413,7 +474,10 @@ class _InputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: BoxConstraints(minHeight: maxLines > 1 ? RequestFormStyle.multilineMinHeight : RequestFormStyle.fieldMinHeight),
+      constraints: BoxConstraints(
+          minHeight: maxLines > 1
+              ? RequestFormStyle.multilineMinHeight
+              : RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -421,11 +485,13 @@ class _InputCard extends StatelessWidget {
         border: Border.all(color: AppColors.divider),
       ),
       child: Row(
-        crossAxisAlignment: maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment:
+            maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           Padding(
             padding: EdgeInsets.only(top: maxLines > 1 ? 3 : 0),
-            child: Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+            child: Icon(icon,
+                size: RequestFormStyle.iconSize, color: AppColors.muted),
           ),
           const SizedBox(width: RequestFormStyle.iconTextGap),
           Expanded(
@@ -433,7 +499,9 @@ class _InputCard extends StatelessWidget {
               controller: controller,
               maxLines: maxLines,
               minLines: maxLines > 1 ? maxLines : 1,
-              textAlignVertical: maxLines > 1 ? TextAlignVertical.top : TextAlignVertical.center,
+              textAlignVertical: maxLines > 1
+                  ? TextAlignVertical.top
+                  : TextAlignVertical.center,
               keyboardType: keyboardType,
               inputFormatters: inputFormatters,
               style: const TextStyle(
@@ -477,17 +545,23 @@ class _FileButtonCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.folder_open_rounded, size: RequestFormStyle.iconSize, color: AppColors.muted),
+          const Icon(Icons.folder_open_rounded,
+              size: RequestFormStyle.iconSize, color: AppColors.muted),
           const SizedBox(width: RequestFormStyle.iconTextGap),
           const Expanded(
-            child: Text('Tài liệu', style: TextStyle(fontSize: 16, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
+            child: Text('Tài liệu',
+                style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500)),
           ),
           OutlinedButton(
             onPressed: onTap,
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF16C879),
               side: const BorderSide(color: Color(0xFF16C879)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
             ),
             child: const Text('Thêm'),

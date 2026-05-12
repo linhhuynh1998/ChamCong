@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../core/network/api_exception.dart';
 import '../core/routes/app_routes.dart';
@@ -7,14 +7,14 @@ import '../core/widgets/app_notice.dart';
 import '../services/auth_service.dart';
 import '../services/biometric_credentials_service.dart';
 import '../services/biometric_service.dart';
+import '../services/firebase_messaging_service.dart';
 
 class LoginController extends ChangeNotifier {
   LoginController({
     AuthService? authService,
     BiometricService? biometricService,
     BiometricCredentialsService? credentialsService,
-  })
-      : _authService = authService ?? AuthService(),
+  })  : _authService = authService ?? AuthService(),
         _biometricService = biometricService ?? BiometricService(),
         _credentialsService =
             credentialsService ?? BiometricCredentialsService(),
@@ -58,6 +58,7 @@ class LoginController extends ChangeNotifier {
         email: email,
         password: password,
       );
+      await FirebaseMessagingService().refreshAndRegisterCurrentDeviceToken();
       await _credentialsService.saveCredentials(
         email: email,
         password: password,
@@ -123,6 +124,8 @@ class LoginController extends ChangeNotifier {
           password: savedCredentials.password,
         );
       }
+
+      await FirebaseMessagingService().refreshAndRegisterCurrentDeviceToken();
 
       if (!context.mounted) {
         return;

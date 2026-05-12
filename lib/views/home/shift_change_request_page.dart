@@ -12,6 +12,7 @@ import '../../models/shift_item.dart';
 import '../../services/auth_service.dart';
 import '../../services/employee_directory_service.dart';
 import '../../services/requests_service.dart';
+import '../../services/request_employee_access.dart';
 import '../../services/shift_service.dart';
 
 class ShiftChangeRequestPage extends StatefulWidget {
@@ -42,6 +43,7 @@ class _ShiftChangeRequestPageState extends State<ShiftChangeRequestPage> {
 
   bool _isSubmitting = false;
   bool _isLoadingEmployees = false;
+  bool _canSelectEmployee = false;
   bool _isLoadingShifts = false;
   List<EmployeeListItem> _employees = [];
   List<ShiftItem> _shifts = [];
@@ -50,7 +52,7 @@ class _ShiftChangeRequestPageState extends State<ShiftChangeRequestPage> {
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
-    _loadEmployees();
+    _loadCurrentEmployee();
     _loadShifts();
   }
 
@@ -58,6 +60,36 @@ class _ShiftChangeRequestPageState extends State<ShiftChangeRequestPage> {
   void dispose() {
     _reasonController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadCurrentEmployee() async {
+    setState(() => _isLoadingEmployees = true);
+    try {
+      final profile = await _authService.me();
+      if (!mounted) return;
+
+      final canSelectEmployee =
+          RequestEmployeeAccess.canSelectEmployee(profile);
+      setState(() {
+        _canSelectEmployee = canSelectEmployee;
+        if (!canSelectEmployee) {
+          _selectedEmployeeId = profile.id;
+          _selectedEmployeeName = RequestEmployeeAccess.employeeName(profile);
+        }
+      });
+
+      if (canSelectEmployee) {
+        await _loadEmployees();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppNotice.showError(context, 'Lỗi tải thông tin nhân viên: $e');
+      }
+    } finally {
+      if (mounted && !_canSelectEmployee) {
+        setState(() => _isLoadingEmployees = false);
+      }
+    }
   }
 
   Future<void> _loadEmployees() async {
@@ -70,7 +102,8 @@ class _ShiftChangeRequestPageState extends State<ShiftChangeRequestPage> {
         final employees = await _employeeService.listEmployees();
         if (mounted) setState(() => _employees = employees);
       } catch (e) {
-        if (mounted) AppNotice.showError(context, 'Lỗi tải danh sách nhân viên: $e');
+        if (mounted)
+          AppNotice.showError(context, 'Lỗi tải danh sách nhân viên: $e');
       } finally {
         if (mounted) setState(() => _isLoadingEmployees = false);
       }
@@ -94,7 +127,8 @@ class _ShiftChangeRequestPageState extends State<ShiftChangeRequestPage> {
         final shifts = await _shiftService.listShifts();
         if (mounted) setState(() => _shifts = shifts);
       } catch (e) {
-        if (mounted) AppNotice.showError(context, 'Lỗi tải danh sách ca làm: $e');
+        if (mounted)
+          AppNotice.showError(context, 'Lỗi tải danh sách ca làm: $e');
       } finally {
         if (mounted) setState(() => _isLoadingShifts = false);
       }
@@ -109,6 +143,10 @@ class _ShiftChangeRequestPageState extends State<ShiftChangeRequestPage> {
   }
 
   Future<void> _pickEmployee() async {
+    if (!_canSelectEmployee) {
+      return;
+    }
+
     if (_isLoadingEmployees || _employees.isEmpty) {
       await _loadEmployees();
       if (!mounted) return;
@@ -229,7 +267,8 @@ class _ShiftChangeRequestPageState extends State<ShiftChangeRequestPage> {
           'Ca làm': _selectedShiftName,
           if (_selectedShiftId.isNotEmpty) 'Mã ca làm': _selectedShiftId,
           'Lý do': _reasonController.text.trim(),
-          if (_selectedReceiverId.isNotEmpty) 'Nhân viên nhận thay đổi': _selectedReceiverName,
+          if (_selectedReceiverId.isNotEmpty)
+            'Nhân viên nhận thay đổi': _selectedReceiverName,
         },
       );
 
@@ -299,9 +338,11 @@ class _ShiftChangeRequestPageState extends State<ShiftChangeRequestPage> {
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Gửi', style: PrimarySectionAppBar.actionTextStyle),
+                  : const Text('Gửi',
+                      style: PrimarySectionAppBar.actionTextStyle),
             ),
           ),
         ],
@@ -312,7 +353,10 @@ class _ShiftChangeRequestPageState extends State<ShiftChangeRequestPage> {
           children: [
             const Text(
               'Nhân viên thay đổi',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary),
             ),
             const SizedBox(height: RequestFormStyle.compactGap),
             _SelectorCard(
@@ -323,7 +367,9 @@ class _ShiftChangeRequestPageState extends State<ShiftChangeRequestPage> {
             const SizedBox(height: RequestFormStyle.itemGap),
             _SelectorCard(
               icon: Icons.calendar_today_outlined,
-              value: _selectedDate == null ? 'Chọn ngày' : _formatDate(_selectedDate!),
+              value: _selectedDate == null
+                  ? 'Chọn ngày'
+                  : _formatDate(_selectedDate!),
               onTap: _pickDate,
               requiredMark: true,
               isPlaceholder: _selectedDate == null,
@@ -346,7 +392,10 @@ class _ShiftChangeRequestPageState extends State<ShiftChangeRequestPage> {
             const SizedBox(height: RequestFormStyle.itemGap),
             const Text(
               'Nhận thay đổi',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary),
             ),
             const SizedBox(height: RequestFormStyle.compactGap),
             _SelectorCard(
@@ -386,7 +435,8 @@ class _SelectorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+          constraints:
+              const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
           padding: RequestFormStyle.fieldPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
@@ -394,7 +444,8 @@ class _SelectorCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+              Icon(icon,
+                  size: RequestFormStyle.iconSize, color: AppColors.muted),
               const SizedBox(width: RequestFormStyle.iconTextGap),
               Expanded(
                 child: Text.rich(
@@ -403,21 +454,26 @@ class _SelectorCard extends StatelessWidget {
                       if (requiredMark)
                         const TextSpan(
                           text: '* ',
-                          style: TextStyle(color: RequestFormStyle.requiredColor, fontSize: 16),
+                          style: TextStyle(
+                              color: RequestFormStyle.requiredColor,
+                              fontSize: 16),
                         ),
                       TextSpan(
                         text: value,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: isPlaceholder ? AppColors.muted : AppColors.textPrimary,
+                          color: isPlaceholder
+                              ? AppColors.muted
+                              : AppColors.textPrimary,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.muted, size: RequestFormStyle.iconSize),
+              const Icon(Icons.chevron_right_rounded,
+                  color: AppColors.muted, size: RequestFormStyle.iconSize),
             ],
           ),
         ),
@@ -444,7 +500,10 @@ class _InputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: BoxConstraints(minHeight: maxLines > 1 ? RequestFormStyle.multilineMinHeight : RequestFormStyle.fieldMinHeight),
+      constraints: BoxConstraints(
+          minHeight: maxLines > 1
+              ? RequestFormStyle.multilineMinHeight
+              : RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -452,11 +511,13 @@ class _InputCard extends StatelessWidget {
         border: Border.all(color: AppColors.divider),
       ),
       child: Row(
-        crossAxisAlignment: maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment:
+            maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           Padding(
             padding: EdgeInsets.only(top: maxLines > 1 ? 3 : 0),
-            child: Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+            child: Icon(icon,
+                size: RequestFormStyle.iconSize, color: AppColors.muted),
           ),
           const SizedBox(width: RequestFormStyle.iconTextGap),
           Expanded(
@@ -464,7 +525,9 @@ class _InputCard extends StatelessWidget {
               controller: controller,
               maxLines: maxLines,
               minLines: maxLines > 1 ? maxLines : 1,
-              textAlignVertical: maxLines > 1 ? TextAlignVertical.top : TextAlignVertical.center,
+              textAlignVertical: maxLines > 1
+                  ? TextAlignVertical.top
+                  : TextAlignVertical.center,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,

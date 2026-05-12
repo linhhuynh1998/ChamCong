@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/widgets/work_bottom_bar.dart';
 import '../../services/app_notification_service.dart';
-import '../../services/firebase_messaging_service.dart';
 import '../../services/requests_service.dart';
 
 class WorkDashboardPage extends StatefulWidget {
@@ -22,7 +21,6 @@ class _WorkDashboardPageState extends State<WorkDashboardPage> {
   @override
   void initState() {
     super.initState();
-    FirebaseMessagingService().registerCurrentDeviceToken();
     _loadRequestSummary();
     _loadUnreadNotificationCount();
   }
@@ -305,7 +303,7 @@ class _DashboardTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

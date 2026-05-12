@@ -14,6 +14,7 @@ import '../../models/location_option.dart';
 import '../../services/auth_service.dart';
 import '../../services/employee_directory_service.dart';
 import '../../services/requests_service.dart';
+import '../../services/request_employee_access.dart';
 
 class PaymentRequestPage extends StatefulWidget {
   const PaymentRequestPage({super.key});
@@ -43,6 +44,7 @@ class _PaymentRequestPageState extends State<PaymentRequestPage> {
 
   bool _isSubmitting = false;
   bool _isLoadingEmployees = false;
+  bool _canSelectEmployee = false;
   List<EmployeeListItem> _employees = [];
 
   bool get _isTransferPayment => _selectedType == 'Chuyển khoản';
@@ -57,7 +59,7 @@ class _PaymentRequestPageState extends State<PaymentRequestPage> {
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
-    _loadEmployees();
+    _loadCurrentEmployee();
   }
 
   @override
@@ -71,6 +73,36 @@ class _PaymentRequestPageState extends State<PaymentRequestPage> {
     super.dispose();
   }
 
+  Future<void> _loadCurrentEmployee() async {
+    setState(() => _isLoadingEmployees = true);
+    try {
+      final profile = await _authService.me();
+      if (!mounted) return;
+
+      final canSelectEmployee =
+          RequestEmployeeAccess.canSelectEmployee(profile);
+      setState(() {
+        _canSelectEmployee = canSelectEmployee;
+        if (!canSelectEmployee) {
+          _selectedEmployeeId = profile.id;
+          _selectedEmployeeName = RequestEmployeeAccess.employeeName(profile);
+        }
+      });
+
+      if (canSelectEmployee) {
+        await _loadEmployees();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppNotice.showError(context, 'Lỗi tải thông tin nhân viên: $e');
+      }
+    } finally {
+      if (mounted && !_canSelectEmployee) {
+        setState(() => _isLoadingEmployees = false);
+      }
+    }
+  }
+
   Future<void> _loadEmployees() async {
     final currentTask = _employeeLoadTask;
     if (currentTask != null) return currentTask;
@@ -81,7 +113,8 @@ class _PaymentRequestPageState extends State<PaymentRequestPage> {
         final employees = await _employeeService.listEmployees();
         if (mounted) setState(() => _employees = employees);
       } catch (e) {
-        if (mounted) AppNotice.showError(context, 'Lỗi tải danh sách nhân viên: $e');
+        if (mounted)
+          AppNotice.showError(context, 'Lỗi tải danh sách nhân viên: $e');
       } finally {
         if (mounted) setState(() => _isLoadingEmployees = false);
       }
@@ -96,6 +129,10 @@ class _PaymentRequestPageState extends State<PaymentRequestPage> {
   }
 
   Future<void> _pickEmployee() async {
+    if (!_canSelectEmployee) {
+      return;
+    }
+
     if (_isLoadingEmployees || _employees.isEmpty) {
       await _loadEmployees();
       if (!mounted) return;
@@ -192,10 +229,16 @@ class _PaymentRequestPageState extends State<PaymentRequestPage> {
           'Loại': _selectedType,
           'Cách thức thanh toán': _selectedType,
           'Ngày': _apiDateFromDisplayDate(_formatDate(_selectedDate!)),
-          if (_purposeController.text.trim().isNotEmpty) 'Mục đích thanh toán': _purposeController.text.trim(),
-          if (_isTransferPayment && _accountOwnerController.text.trim().isNotEmpty) 'Chủ tài khoản': _accountOwnerController.text.trim(),
-          if (_isTransferPayment && _bankNameController.text.trim().isNotEmpty) 'Tên ngân hàng': _bankNameController.text.trim(),
-          if (_isTransferPayment && _bankAccountController.text.trim().isNotEmpty) 'Số tài khoản': _bankAccountController.text.trim(),
+          if (_purposeController.text.trim().isNotEmpty)
+            'Mục đích thanh toán': _purposeController.text.trim(),
+          if (_isTransferPayment &&
+              _accountOwnerController.text.trim().isNotEmpty)
+            'Chủ tài khoản': _accountOwnerController.text.trim(),
+          if (_isTransferPayment && _bankNameController.text.trim().isNotEmpty)
+            'Tên ngân hàng': _bankNameController.text.trim(),
+          if (_isTransferPayment &&
+              _bankAccountController.text.trim().isNotEmpty)
+            'Số tài khoản': _bankAccountController.text.trim(),
           'Lý do': _reasonController.text.trim(),
         },
       );
@@ -268,9 +311,11 @@ class _PaymentRequestPageState extends State<PaymentRequestPage> {
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Gửi', style: PrimarySectionAppBar.actionTextStyle),
+                  : const Text('Gửi',
+                      style: PrimarySectionAppBar.actionTextStyle),
             ),
           ),
         ],
@@ -307,7 +352,9 @@ class _PaymentRequestPageState extends State<PaymentRequestPage> {
             const SizedBox(height: RequestFormStyle.itemGap),
             _SelectorCard(
               icon: Icons.calendar_today_outlined,
-              value: _selectedDate == null ? 'Chọn ngày' : _formatDate(_selectedDate!),
+              value: _selectedDate == null
+                  ? 'Chọn ngày'
+                  : _formatDate(_selectedDate!),
               onTap: _pickDate,
               requiredMark: true,
               isPlaceholder: _selectedDate == null,
@@ -381,7 +428,8 @@ class _SelectorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+          constraints:
+              const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
           padding: RequestFormStyle.fieldPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
@@ -389,7 +437,8 @@ class _SelectorCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+              Icon(icon,
+                  size: RequestFormStyle.iconSize, color: AppColors.muted),
               const SizedBox(width: RequestFormStyle.iconTextGap),
               Expanded(
                 child: Text.rich(
@@ -398,21 +447,26 @@ class _SelectorCard extends StatelessWidget {
                       if (requiredMark)
                         const TextSpan(
                           text: '* ',
-                          style: TextStyle(color: RequestFormStyle.requiredColor, fontSize: 16),
+                          style: TextStyle(
+                              color: RequestFormStyle.requiredColor,
+                              fontSize: 16),
                         ),
                       TextSpan(
                         text: value,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: isPlaceholder ? AppColors.muted : AppColors.textPrimary,
+                          color: isPlaceholder
+                              ? AppColors.muted
+                              : AppColors.textPrimary,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.muted, size: RequestFormStyle.iconSize),
+              const Icon(Icons.chevron_right_rounded,
+                  color: AppColors.muted, size: RequestFormStyle.iconSize),
             ],
           ),
         ),
@@ -443,7 +497,10 @@ class _InputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: BoxConstraints(minHeight: maxLines > 1 ? RequestFormStyle.multilineMinHeight : RequestFormStyle.fieldMinHeight),
+      constraints: BoxConstraints(
+          minHeight: maxLines > 1
+              ? RequestFormStyle.multilineMinHeight
+              : RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -451,11 +508,13 @@ class _InputCard extends StatelessWidget {
         border: Border.all(color: AppColors.divider),
       ),
       child: Row(
-        crossAxisAlignment: maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment:
+            maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           Padding(
             padding: EdgeInsets.only(top: maxLines > 1 ? 3 : 0),
-            child: Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+            child: Icon(icon,
+                size: RequestFormStyle.iconSize, color: AppColors.muted),
           ),
           const SizedBox(width: RequestFormStyle.iconTextGap),
           Expanded(
@@ -465,7 +524,9 @@ class _InputCard extends StatelessWidget {
               inputFormatters: inputFormatters,
               maxLines: maxLines,
               minLines: maxLines > 1 ? maxLines : 1,
-              textAlignVertical: maxLines > 1 ? TextAlignVertical.top : TextAlignVertical.center,
+              textAlignVertical: maxLines > 1
+                  ? TextAlignVertical.top
+                  : TextAlignVertical.center,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,

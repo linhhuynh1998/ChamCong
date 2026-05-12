@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/primary_section_app_bar.dart';
 import 'request_type_picker_page.dart';
+import '../../services/auth_service.dart';
+import '../../services/request_employee_access.dart';
 import '../../services/requests_service.dart';
 
 class RequestManagementPage extends StatefulWidget {
@@ -17,8 +19,10 @@ class RequestManagementPage extends StatefulWidget {
 class _RequestManagementPageState extends State<RequestManagementPage> {
   late DateTime _selectedDate;
   _RequestDateRangeMode _rangeMode = _RequestDateRangeMode.week;
+  final AuthService _authService = AuthService();
   final RequestsService _requestsService = RequestsService();
   bool _isLoadingRequests = false;
+  bool _canManageRequests = false;
   String? _busyRequestId;
   String? _requestsError;
   List<Map<String, dynamic>> _requests = <Map<String, dynamic>>[];
@@ -30,8 +34,26 @@ class _RequestManagementPageState extends State<RequestManagementPage> {
     _selectedDate = DateTime.now();
     // initial load
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCurrentUserAccess();
       _loadRequests();
     });
+  }
+
+  Future<void> _loadCurrentUserAccess() async {
+    try {
+      final profile = await _authService.me();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _canManageRequests = RequestEmployeeAccess.canSelectEmployee(profile);
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _canManageRequests = false);
+    }
   }
 
   void _openRequestTypePicker(BuildContext context) {
@@ -42,15 +64,20 @@ class _RequestManagementPageState extends State<RequestManagementPage> {
     );
   }
 
-  void _openRequestDetail(Map<String, dynamic> item) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
+  Future<void> _openRequestDetail(Map<String, dynamic> item) async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
         builder: (_) => RequestDetailPage(
           item: item,
           requestsService: _requestsService,
+          canManageRequests: _canManageRequests,
         ),
       ),
     );
+
+    if (changed == true) {
+      await _loadRequests();
+    }
   }
 
   Future<void> _pickDateRange() async {
@@ -236,6 +263,10 @@ class _RequestManagementPageState extends State<RequestManagementPage> {
     Map<String, dynamic> request, {
     required String status,
   }) async {
+    if (!_canManageRequests) {
+      return;
+    }
+
     final id = _requestId(request);
     if (id.isEmpty) {
       if (!mounted) {
@@ -379,6 +410,7 @@ class _RequestManagementPageState extends State<RequestManagementPage> {
         return _RequestListCard(
           item: item,
           isBusy: _busyRequestId == _requestId(item),
+          canManageRequests: _canManageRequests,
           onTap: () => _openRequestDetail(item),
           onApprove: () => _changeRequestStatus(item, status: 'approved'),
           onReject: () => _changeRequestStatus(item, status: 'rejected'),
@@ -393,6 +425,7 @@ class _RequestListCard extends StatelessWidget {
     required this.item,
     required this.onTap,
     required this.isBusy,
+    required this.canManageRequests,
     required this.onApprove,
     required this.onReject,
   });
@@ -400,6 +433,7 @@ class _RequestListCard extends StatelessWidget {
   final Map<String, dynamic> item;
   final VoidCallback onTap;
   final bool isBusy;
+  final bool canManageRequests;
   final VoidCallback onApprove;
   final VoidCallback onReject;
 
@@ -536,7 +570,7 @@ class _RequestListCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (status.label == 'Chờ duyệt')
+              if (canManageRequests && status.label == 'Chờ duyệt')
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: Row(
@@ -626,13 +660,16 @@ class _RequestDisplayField {
 }
 
 class RequestDetailPage extends StatefulWidget {
-  const RequestDetailPage({super.key,
+  const RequestDetailPage({
+    super.key,
     required this.item,
     required this.requestsService,
+    required this.canManageRequests,
   });
 
   final Map<String, dynamic> item;
   final RequestsService requestsService;
+  final bool canManageRequests;
 
   @override
   State<RequestDetailPage> createState() => _RequestDetailPageState();
@@ -640,6 +677,7 @@ class RequestDetailPage extends StatefulWidget {
 
 class _RequestDetailPageState extends State<RequestDetailPage> {
   late final Future<Map<String, dynamic>> _detailFuture;
+  bool _isUpdatingStatus = false;
 
   @override
   void initState() {
@@ -655,8 +693,56 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
             .catchError((_) => widget.item);
   }
 
+  Future<void> _changeStatus(String status) async {
+    if (!widget.canManageRequests || _isUpdatingStatus) {
+      return;
+    }
+
+    final id = _pickText(widget.item, const ['id', 'request_id']);
+    if (id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không tìm thấy mã yêu cầu.')),
+      );
+      return;
+    }
+
+    setState(() => _isUpdatingStatus = true);
+    try {
+      final message = await widget.requestsService.updateRequestStatus(
+        id: id,
+        status: status,
+        companyId: _pickText(widget.item, const ['company_id', 'companyId']),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdatingStatus = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final status = _requestStatusInfo(widget.item);
+    final canShowActions =
+        widget.canManageRequests && status.label == 'Chờ duyệt';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4FAFC),
       appBar: PrimarySectionAppBar(
@@ -665,17 +751,23 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
         foregroundColor: Colors.white,
         showBottomDivider: false,
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.mark_unread_chat_alt_outlined,
-                size: 26, color: Colors.white),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon:
-                const Icon(Icons.print_outlined, size: 26, color: Colors.white),
-          ),
-          const SizedBox(width: 8),
+          if (canShowActions) ...[
+            IconButton(
+              tooltip: 'Chấp nhận',
+              onPressed:
+                  _isUpdatingStatus ? null : () => _changeStatus('approved'),
+              icon: const Icon(Icons.check_rounded,
+                  size: 28, color: Colors.white),
+            ),
+            IconButton(
+              tooltip: 'Từ chối',
+              onPressed:
+                  _isUpdatingStatus ? null : () => _changeStatus('rejected'),
+              icon: const Icon(Icons.close_rounded,
+                  size: 28, color: Colors.white),
+            ),
+            const SizedBox(width: 8),
+          ],
         ],
       ),
       body: FutureBuilder<Map<String, dynamic>>(

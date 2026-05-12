@@ -12,6 +12,7 @@ import '../../models/location_option.dart';
 import '../../services/auth_service.dart';
 import '../../services/employee_directory_service.dart';
 import '../../services/requests_service.dart';
+import '../../services/request_employee_access.dart';
 
 class ProposalRequestPage extends StatefulWidget {
   const ProposalRequestPage({super.key});
@@ -23,7 +24,8 @@ class ProposalRequestPage extends StatefulWidget {
 class _ProposalRequestPageState extends State<ProposalRequestPage> {
   final TextEditingController _purposeController = TextEditingController();
   final TextEditingController _accountOwnerController = TextEditingController();
-  final TextEditingController _accountNumberController = TextEditingController();
+  final TextEditingController _accountNumberController =
+      TextEditingController();
   final TextEditingController _bankNameController = TextEditingController();
   final AuthService _authService = AuthService();
   final EmployeeDirectoryService _employeeService = EmployeeDirectoryService();
@@ -41,6 +43,7 @@ class _ProposalRequestPageState extends State<ProposalRequestPage> {
 
   bool _isSubmitting = false;
   bool _isLoadingEmployees = false;
+  bool _canSelectEmployee = false;
   List<EmployeeListItem> _employees = [];
   final List<_ProposalDetailControllers> _details = [
     _ProposalDetailControllers(),
@@ -60,7 +63,37 @@ class _ProposalRequestPageState extends State<ProposalRequestPage> {
   @override
   void initState() {
     super.initState();
-    _loadEmployees();
+    _loadCurrentEmployee();
+  }
+
+  Future<void> _loadCurrentEmployee() async {
+    setState(() => _isLoadingEmployees = true);
+    try {
+      final profile = await _authService.me();
+      if (!mounted) return;
+
+      final canSelectEmployee =
+          RequestEmployeeAccess.canSelectEmployee(profile);
+      setState(() {
+        _canSelectEmployee = canSelectEmployee;
+        if (!canSelectEmployee) {
+          _selectedEmployeeId = profile.id;
+          _selectedEmployeeName = RequestEmployeeAccess.employeeName(profile);
+        }
+      });
+
+      if (canSelectEmployee) {
+        await _loadEmployees();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppNotice.showError(context, 'Lỗi tải thông tin nhân viên: $e');
+      }
+    } finally {
+      if (mounted && !_canSelectEmployee) {
+        setState(() => _isLoadingEmployees = false);
+      }
+    }
   }
 
   Future<void> _loadEmployees() async {
@@ -207,12 +240,17 @@ class _ProposalRequestPageState extends State<ProposalRequestPage> {
   }
 
   Future<void> _pickEmployee() async {
+    if (!_canSelectEmployee) {
+      return;
+    }
+
     if (_isLoadingEmployees || _employees.isEmpty) {
       await _loadEmployees();
       if (!mounted) return;
     }
     if (_employees.isEmpty) {
-      AppNotice.showError(context, 'Ch\u{01B0}a c\u{00F3} d\u{1EEF} li\u{1EC7}u nh\u{00E2}n vi\u{00EA}n \u{0111}\u{1EC3} ch\u{1ECD}n.');
+      AppNotice.showError(context,
+          'Ch\u{01B0}a c\u{00F3} d\u{1EEF} li\u{1EC7}u nh\u{00E2}n vi\u{00EA}n \u{0111}\u{1EC3} ch\u{1ECD}n.');
       return;
     }
 
@@ -416,7 +454,8 @@ class _ProposalRequestPageState extends State<ProposalRequestPage> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Gửi', style: PrimarySectionAppBar.actionTextStyle),
+                  : const Text('Gửi',
+                      style: PrimarySectionAppBar.actionTextStyle),
             ),
           ),
         ],
@@ -702,7 +741,8 @@ class _SelectorCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+          constraints:
+              const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
           padding: RequestFormStyle.fieldPadding,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
@@ -710,7 +750,8 @@ class _SelectorCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+              Icon(icon,
+                  size: RequestFormStyle.iconSize, color: AppColors.muted),
               const SizedBox(width: RequestFormStyle.iconTextGap),
               Expanded(
                 child: Text.rich(
@@ -788,7 +829,8 @@ class _InputCard extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.only(top: maxLines > 1 ? 3 : 0),
-            child: Icon(icon, size: RequestFormStyle.iconSize, color: AppColors.muted),
+            child: Icon(icon,
+                size: RequestFormStyle.iconSize, color: AppColors.muted),
           ),
           const SizedBox(width: RequestFormStyle.iconTextGap),
           Expanded(
@@ -799,8 +841,9 @@ class _InputCard extends StatelessWidget {
               onChanged: onChanged,
               maxLines: maxLines,
               minLines: maxLines > 1 ? maxLines : 1,
-              textAlignVertical:
-                  maxLines > 1 ? TextAlignVertical.top : TextAlignVertical.center,
+              textAlignVertical: maxLines > 1
+                  ? TextAlignVertical.top
+                  : TextAlignVertical.center,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -840,7 +883,8 @@ class _ReadOnlyAmountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
+      constraints:
+          const BoxConstraints(minHeight: RequestFormStyle.fieldMinHeight),
       padding: RequestFormStyle.fieldPadding,
       decoration: BoxDecoration(
         color: RequestFormStyle.fieldBackground,
@@ -857,9 +901,7 @@ class _ReadOnlyAmountCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: isPlaceholder
-                    ? AppColors.muted
-                    : AppColors.textPrimary,
+                color: isPlaceholder ? AppColors.muted : AppColors.textPrimary,
               ),
             ),
           ),
@@ -909,7 +951,8 @@ class _AttachmentCard extends StatelessWidget {
                 foregroundColor: const Color(0xFF16C879),
                 side: const BorderSide(color: Color(0xFF16C879)),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(RequestFormStyle.fieldRadius),
+                  borderRadius:
+                      BorderRadius.circular(RequestFormStyle.fieldRadius),
                 ),
                 textStyle: const TextStyle(
                   fontSize: 16,

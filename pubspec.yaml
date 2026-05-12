@@ -1,4 +1,4 @@
-name: B2MSR
+name: b2msr
 description: A Flutter application structured with the MVC pattern.
 publish_to: 'none'
 version: 1.0.0+1
@@ -28,6 +28,12 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.3
   flutter_native_splash: ^2.4.6
+
+dependency_overrides:
+  # 2.6.0 embeds objective_c.framework via Dart native assets; archived
+  # iOS builds can contain an iOS Simulator arm64 slice and fail App Store
+  # validation. 2.5.1 uses the plugin implementation instead.
+  path_provider_foundation: 2.5.1
 
 logo_path: &logo_path assets/logo/logo.png
 

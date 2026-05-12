@@ -2,16 +2,19 @@ import 'package:flutter/foundation.dart';
 
 import '../core/network/api_client.dart';
 import 'session_service.dart';
+import 'app_local_notification_service.dart';
 
 class RequestsService {
   RequestsService({
     ApiClient? apiClient,
     SessionService? sessionService,
   })  : _apiClient = apiClient ?? ApiClient(),
-        _sessionService = sessionService ?? SessionService();
+      _sessionService = sessionService ?? SessionService(),
+      _localNotificationService = AppLocalNotificationService.instance;
 
   final ApiClient _apiClient;
   final SessionService _sessionService;
+    final AppLocalNotificationService _localNotificationService;
 
   /// Fetch requests between [start] and [end] (inclusive).
   /// Uses query params `start_date` and `end_date` in `yyyy-MM-dd` format.
@@ -109,6 +112,11 @@ class RequestsService {
       '/requests',
       headers: _buildAuthHeaders(token),
       body: body,
+    );
+
+    await _localNotificationService.showRequestCreated(
+      requestType: requestType,
+      message: response['message']?.toString() ?? 'Gửi yêu cầu thành công.',
     );
 
     return response['message']?.toString() ?? 'Gửi yêu cầu thành công.';

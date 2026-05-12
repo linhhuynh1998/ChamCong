@@ -21,6 +21,11 @@ class AppNotificationService {
     }
 
     final authToken = await _sessionService.getToken();
+    if (authToken == null || authToken.isEmpty) {
+      debugPrint('[FCM] Skip registering device token: missing auth token');
+      return;
+    }
+
     await _apiClient.post(
       '/device-token',
       headers: _buildAuthHeaders(authToken),
@@ -89,7 +94,6 @@ class AppNotificationService {
       case TargetPlatform.fuchsia:
         return 'fuchsia';
     }
-    return 'unknown';
   }
 
   List<Map<String, dynamic>> _extractList(Map<String, dynamic> body) {
@@ -99,7 +103,12 @@ class AppNotificationService {
     }
 
     if (payload is Map<String, dynamic>) {
-      for (final key in const ['notifications', 'items', 'results', 'records']) {
+      for (final key in const [
+        'notifications',
+        'items',
+        'results',
+        'records'
+      ]) {
         final value = payload[key];
         if (value is List) {
           return _mapList(value);

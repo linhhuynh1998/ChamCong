@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../controllers/login_controller.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/widgets/biometric_icon.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -104,13 +105,17 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 const SizedBox(width: 16),
                                 _SquareActionButton(
-                                  icon:
-                                      Theme.of(context).platform ==
-                                          TargetPlatform.iOS
-                                      ? Icons.face_retouching_natural
-                                      : Icons.fingerprint_rounded,
-                                  onPressed: () => _controller
-                                      .loginWithBiometric(context),
+                                  child: BiometricIcon(
+                                    type: Theme.of(context).platform ==
+                                            TargetPlatform.iOS
+                                        ? BiometricIconType.faceId
+                                        : BiometricIconType.fingerprint,
+                                    size: 42,
+                                    color: AppColors.dark,
+                                    strokeWidth: 3.2,
+                                  ),
+                                  onPressed: () =>
+                                      _controller.loginWithBiometric(context),
                                 ),
                               ],
                             ),
@@ -262,12 +267,14 @@ class _SquareActionButton extends StatelessWidget {
   const _SquareActionButton({
     required this.onPressed,
     this.icon,
+    this.child,
     this.label,
     this.labelColor,
   });
 
   final VoidCallback onPressed;
   final IconData? icon;
+  final Widget? child;
   final String? label;
   final Color? labelColor;
 
@@ -288,19 +295,20 @@ class _SquareActionButton extends StatelessWidget {
         ),
         onPressed: onPressed,
         child: Center(
-          child: icon != null
-              ? Icon(icon, size: 32)
-              : Text(
-                  label ?? '',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w700,
-                    color: labelColor ?? AppColors.dark,
-                  ),
-                ),
-            ),
+          child: child ??
+              (icon != null
+                  ? Icon(icon, size: 32)
+                  : Text(
+                      label ?? '',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w700,
+                        color: labelColor ?? AppColors.dark,
+                      ),
+                    )),
         ),
+      ),
     );
   }
 }

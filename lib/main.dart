@@ -61,12 +61,55 @@ class _MyAppState extends State<MyApp> {
       await fcmService.initialize(
         onNotificationTap: (data) {
           debugPrint('[FCM Handler] Notification tapped: $data');
-          // Handle notification tap here if needed
+          _handleNotificationTap(data);
         },
       );
       debugPrint('[FCM] Firebase Messaging initialized');
     } catch (e) {
       debugPrint('[FCM] Error initializing Firebase Messaging: $e');
+    }
+  }
+
+  /// Handle notification tap based on notification type
+  void _handleNotificationTap(Map<String, dynamic> data) {
+    final type = data['type']?.toString() ?? '';
+    debugPrint('[FCM Handler] Processing notification type: $type');
+
+    switch (type) {
+      case 'request_status_update':
+        _handleRequestStatusNotification(data);
+        break;
+      case 'new_request':
+        _handleNewRequestNotification(data);
+        break;
+      default:
+        // Default: open notifications page
+        final navigator = AppNavigator.navigatorKey.currentState;
+        if (navigator != null) {
+          navigator.pushNamed(AppRoutes.notifications);
+        }
+    }
+  }
+
+  /// Handle request status update notification (approval/rejection)
+  void _handleRequestStatusNotification(Map<String, dynamic> data) {
+    final requestId = data['request_id']?.toString() ?? '';
+    final status = data['status']?.toString() ?? '';
+
+    debugPrint('[FCM Handler] Request status update - ID: $requestId, Status: $status');
+
+    final navigator = AppNavigator.navigatorKey.currentState;
+    if (navigator != null) {
+      // Navigate to request management page to view request status
+      navigator.pushNamed(AppRoutes.requestManagement);
+    }
+  }
+
+  /// Handle new request notification (for managers)
+  void _handleNewRequestNotification(Map<String, dynamic> data) {
+    final navigator = AppNavigator.navigatorKey.currentState;
+    if (navigator != null) {
+      navigator.pushNamed(AppRoutes.notifications);
     }
   }
 

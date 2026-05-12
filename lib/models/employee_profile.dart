@@ -51,6 +51,9 @@ class EmployeeProfile {
     final data = json['data'];
     final rootMap = data is Map<String, dynamic> ? data : json;
     final map = _asMap(rootMap['user']) ?? rootMap;
+    final roleMap = _asMap(map['role']) ?? _asMap(rootMap['role']);
+    final permissionGroup =
+        _asMap(map['permission_group']) ?? _asMap(rootMap['permission_group']);
     final company = _asMap(map['company']) ??
         _asMap(map['office']) ??
         _asMap(map['branch']) ??
@@ -65,9 +68,19 @@ class EmployeeProfile {
           'Nhan vien',
       email: map['email']?.toString() ?? '',
       phone: map['phone']?.toString() ?? map['mobile']?.toString() ?? '',
-      role: map['role']?.toString() ?? '',
+      role: _firstNonEmpty([
+        if (map['role'] is String) map['role'],
+        map['access_role'],
+        map['account_type'],
+        map['user_type'],
+        map['type'],
+        roleMap?['name'],
+        permissionGroup?['name'],
+        if (rootMap['role'] is String) rootMap['role'],
+      ]),
       department: map['department']?.toString() ?? '',
-      jobTitle: map['job_title']?.toString() ?? map['position']?.toString() ?? '',
+      jobTitle:
+          map['job_title']?.toString() ?? map['position']?.toString() ?? '',
       companyName: company?['name']?.toString() ??
           map['company']?.toString() ??
           map['company_name']?.toString() ??
@@ -111,6 +124,16 @@ class EmployeeProfile {
 
   static Map<String, dynamic>? _asMap(dynamic value) {
     return value is Map<String, dynamic> ? value : null;
+  }
+
+  static String _firstNonEmpty(Iterable<dynamic> values) {
+    for (final value in values) {
+      final text = value?.toString().trim() ?? '';
+      if (text.isNotEmpty) {
+        return text;
+      }
+    }
+    return '';
   }
 
   static double? _toDouble(dynamic value) {

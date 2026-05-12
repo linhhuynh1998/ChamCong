@@ -5,6 +5,8 @@ import '../../core/widgets/app_notice.dart';
 import '../../core/widgets/primary_section_app_bar.dart';
 import '../../models/app_notification_item.dart';
 import '../../services/app_notification_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/request_employee_access.dart';
 import '../../services/requests_service.dart';
 import '../home/request_management_page.dart';
 
@@ -17,16 +19,36 @@ class NotificationsPage extends StatefulWidget {
 
 class _NotificationsPageState extends State<NotificationsPage> {
   final AppNotificationService _notificationService = AppNotificationService();
+  final AuthService _authService = AuthService();
   final RequestsService _requestsService = RequestsService();
 
   bool _isLoading = false;
+  bool _canManageRequests = false;
   String? _error;
   List<AppNotificationItem> _notifications = <AppNotificationItem>[];
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUserAccess();
     _loadNotifications();
+  }
+
+  Future<void> _loadCurrentUserAccess() async {
+    try {
+      final profile = await _authService.me();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _canManageRequests = RequestEmployeeAccess.canSelectEmployee(profile);
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _canManageRequests = false);
+    }
   }
 
   Future<void> _loadNotifications() async {
@@ -86,6 +108,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           builder: (_) => RequestDetailPage(
             item: _notificationRequestPayload(item),
             requestsService: _requestsService,
+            canManageRequests: _canManageRequests,
           ),
         ),
       );
@@ -107,8 +130,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
 
     // Extract 'request' object từ API response (backend structure: { request: {...}, employee: {...} })
-    final requestData = requestDetail['request'] is Map 
-        ? requestDetail['request'] 
+    final requestData = requestDetail['request'] is Map
+        ? requestDetail['request']
         : requestDetail;
 
     await Navigator.of(context).push(
@@ -116,6 +139,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         builder: (_) => RequestDetailPage(
           item: requestData,
           requestsService: _requestsService,
+          canManageRequests: _canManageRequests,
         ),
       ),
     );
@@ -260,9 +284,8 @@ class _NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = item.isRead
-        ? const Color(0xFF9AA8BB)
-        : const Color(0xFF20C46F);
+    final accent =
+        item.isRead ? const Color(0xFF9AA8BB) : const Color(0xFF20C46F);
 
     return Material(
       color: Colors.white,
